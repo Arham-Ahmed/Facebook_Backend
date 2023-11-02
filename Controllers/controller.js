@@ -16,8 +16,7 @@ const removeTodo = async (req, res) => {
   const todo_iD = req.body;
   try {
     await Todos.findOneAndDelete({ _id: todo_iD });
-
-    res.status(204).json({
+    res.status(200).json({
       resStatus: res.status,
       message: "Deleted SucessFully",
     });
@@ -28,20 +27,13 @@ const removeTodo = async (req, res) => {
   }
 };
 const updateTodo = async (req, res) => {
-  const todo = req.body.todo;
   const todo_id = req.body._id;
-  const done = req.body.done;
-
+  const todo = req.body;
   try {
-    await Todos.findOneAndUpdate(
-      { _id: todo_id },
-      { todo: todo },
-      { done: done }
-    );
+    await Todos.findOneAndUpdate({ _id: todo_id }, todo);
     res
       .status(200)
       .json({ resStatus: res.status, message: "Done SucessFully" });
-    console.log(req.body);
   } catch (e) {
     res.status(500).json({
       message: e.message,
