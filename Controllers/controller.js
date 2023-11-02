@@ -4,54 +4,75 @@ const addTodo = async (req, res) => {
   try {
     const newTodo = new Todos(todo);
     await newTodo.save();
-    res.send({ message: "Data Submitied" });
+    res.status(201).json({
+      resStatus: res.status,
+      message: "Data Submitied",
+    });
   } catch (e) {
     res.send({ error: e.message });
   }
 };
 const removeTodo = async (req, res) => {
   const todo_iD = req.body;
-  console.log(todo_iD);
   try {
     await Todos.findOneAndDelete({ _id: todo_iD });
 
-    res.send({ message: "Deleted SucessFully" });
+    res.status(204).json({
+      resStatus: res.status,
+      message: "Deleted SucessFully",
+    });
   } catch (e) {
-    res.send({ error: e.message });
+    res.status(500).json({
+      message: e.message,
+    });
   }
 };
 const updateTodo = async (req, res) => {
   const todo = req.body.todo;
   const todo_id = req.body._id;
   const done = req.body.done;
-  console.log(req.body._id);
+
   try {
     await Todos.findOneAndUpdate(
       { _id: todo_id },
       { todo: todo },
       { done: done }
     );
-    // await Todos.findOneAndUpdate({ _id: todo_id }, { todo });
-
-    res.send({ message: "Done SucessFully" });
+    res
+      .status(200)
+      .json({ resStatus: res.status, message: "Done SucessFully" });
+    console.log(req.body);
   } catch (e) {
-    res.send({ error: e.message });
+    res.status(500).json({
+      message: e.message,
+    });
   }
 };
 const getallTodo = async (req, res) => {
-  res.status(200).json({
-    res: res.status,
-    Todos: await Todos.find({}),
-    nbHits: Todos.length,
-  });
+  try {
+    TodosData = (await Todos.find({})).reverse();
+    res.status(200).json({
+      resStatus: res.status,
+      Todos: TodosData,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: e.message,
+    });
+  }
 };
 const searchTodo = async (req, res) => {
-  const todo = req.body.todo;
-  res.status(200).json({
-    res: res.status,
-    Todos: await Todos.find({ todo: todo }),
-    nbHits: Todos.length,
-  });
+  try {
+    const todo = req.body.todo;
+    res.status(200).json({
+      resStatus: res.status,
+      Todos: await Todos.find({ todo: todo }),
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: e.message,
+    });
+  }
 };
 
 module.exports = {
