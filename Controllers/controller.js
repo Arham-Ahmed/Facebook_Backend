@@ -1,4 +1,4 @@
-const Todos = require("../Models/mode_schema");
+const Todos = require("../Models/todo_schema");
 const addTodo = async (req, res) => {
   const todo = req.body;
   try {
