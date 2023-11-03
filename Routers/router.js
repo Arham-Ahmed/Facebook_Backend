@@ -8,10 +8,11 @@ const {
 } = require("../Controllers/controller");
 const router = express.Router();
 
-router.route("/").get(getallTodo);
-router.route("/search").get(searchTodo);
-router.route("/add").post(addTodo);
-router.route("/remove").delete(removeTodo);
-router.route("/update").put(updateTodo);
+router
+  .get("/", getallTodo)
+  .get("/search", searchTodo)
+  .post("/add", addTodo)
+  .delete("/remove", removeTodo)
+  .put("/update", updateTodo);
 
 module.exports = { router };
