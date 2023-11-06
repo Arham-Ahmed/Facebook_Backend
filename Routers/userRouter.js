@@ -14,7 +14,7 @@ userRouter
   .get("/search", searchUser)
   .post("/register", createUser)
   .post("/login", loginUser)
-  .delete("/remove-user", removeUser)
+  .delete("/delete", removeUser)
   .put("/update-user", updateUser);
 
 module.exports = { userRouter };

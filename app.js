@@ -6,6 +6,7 @@ const ConnectDb = require("./db/connect");
 const { router } = require("./Routers/router");
 const { userRouter } = require("./Routers/userRouter");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const app = express();
 const PORT = process.env.PORT || 5000;
 const corsOptions = {
@@ -15,6 +16,7 @@ const corsOptions = {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(upload.none());
+app.use(cookieParser());
 app.use(cors(corsOptions));
 
 app.get("/", (req, res) => {

@@ -1,68 +1,95 @@
 const Users = require("../Models/user_schema");
 const bcryptjs = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const expressValidation = require("express-validator");
 
+const Option = {
+  expires: new Date(Date.now() * 60 * 60 * 24 * 90),
+  httpOnly: true,
+};
 // For Creating Users
 const createUser = async (req, res) => {
   const user = req.body;
   try {
     const newUser = new Users(user);
     await newUser.save();
-    res.status(201).json({
+    const token = jwt.sign({ _id: this._id }, process.env.JWTSCERET);
+    res.status(201).cookie("token", token, [Option]).json({
       resStatus: res.status,
       message: "User Created SucessFully ",
       user: newUser,
+      token: token,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 };
 // For Loggin Users
+
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
   try {
-    const user = await Users.findOne({ email: email, password: password });
+    const user = await Users.findOne({ email: email });
     if (!user) {
       res.status(404).json({
         sucess: false,
         message: "User Dosent Exists",
       });
     }
-    // const isMatch = await bcryptjs.compare(password, req.body.password);
-    // if (!isMatch) {
-    //   res.status(404).json({
-    //     sucess: false,
-    //     message: "Invalid Credential",
-    //   });
-    // }
-    const token = await Users.genratetoken();
-    res.status(200).json({
+    const isMatch = await bcryptjs.compare(password, user.password);
+    if (!isMatch) {
+      res.status(404).json({
+        sucess: false,
+        message: "Invalid Credential",
+      });
+    }
+    const token = jwt.sign({ _id: this._id }, process.env.JWTSCERET);
+    res.status(200).cookie("token", token, Option).json({
       sucess: true,
       user: user,
       token,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    res.status(500).json({
+      error: e.message,
+    });
   }
 };
 // For Removing Users
 const removeUser = async (req, res) => {
-  const user_iD = req.body;
+  const { email, password, id } = req.body;
   try {
-    await Todos.findOneAndDelete({ _id: user_iD });
-    res.status(200).json({
-      resStatus: res.status,
-      message: "User Deleted SucessFully",
-    });
+    const user = await Users.findOne({ email: email });
+    if (!user) {
+      res.status(404).json({
+        sucess: false,
+        message: "User Dosent Exists",
+      });
+    }
+    const isMatch = await bcryptjs.compare(password, user.password);
+    if (!isMatch) {
+      res.status(404).json({
+        sucess: false,
+        message: "Invalid Credential",
+      });
+    }
+
+    const deleteUser = await Users.findOneAndDelete({ email: email });
+    if (deleteUser) {
+      res.status(200).clearCookie("token").json({
+        sucess: true,
+        user: user,
+      });
+    }
   } catch (e) {
     res.status(500).json({
-      message: e.message,
+      error: e.message,
     });
   }
 };
 // For Updating Users
 const updateUser = async (req, res) => {
-  const user_id = req.body._id;
-  const User = req.body;
+  const { email, password, id } = req.body;
   try {
     await Todos.findOneAndUpdate({ _id: user_id }, User);
     res
