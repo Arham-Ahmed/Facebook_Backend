@@ -5,13 +5,15 @@ const {
   removeUser,
   updateUser,
   searchUser,
+  loginUser,
 } = require("../Controllers/userController");
 const userRouter = express.Router();
 
 userRouter
   .get("/", getallUsers)
   .get("/search", searchUser)
-  .post("/create-user", createUser)
+  .post("/register", createUser)
+  .post("/login", loginUser)
   .delete("/remove-user", removeUser)
   .put("/update-user", updateUser);
 

@@ -13,7 +13,7 @@ const addTodo = async (req, res) => {
   }
 };
 const removeTodo = async (req, res) => {
-  const todo_iD = req.body;
+  const todo_iD = req.params.id;
   try {
     await Todos.findOneAndDelete({ _id: todo_iD });
     res.status(200).json({
@@ -27,13 +27,17 @@ const removeTodo = async (req, res) => {
   }
 };
 const updateTodo = async (req, res) => {
-  const todo_id = req.body._id;
-  const todo = req.body;
+  const todo_id = req.body.id;
+  const { todo, done } = req.body;
+
   try {
-    await Todos.findOneAndUpdate({ _id: todo_id }, todo);
+    const up = await Todos.findOneAndUpdate(
+      { _id: todo_id },
+      { todo: todo, done: done }
+    );
     res
       .status(200)
-      .json({ resStatus: res.status, message: "Done SucessFully" });
+      .json({ resStatus: res.status, todo: up, message: "Done SucessFully" });
   } catch (e) {
     res.status(500).json({
       message: e.message,

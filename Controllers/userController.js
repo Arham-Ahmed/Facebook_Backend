@@ -1,4 +1,5 @@
 const Users = require("../Models/user_schema");
+const bcryptjs = require("bcryptjs");
 
 // For Creating Users
 const createUser = async (req, res) => {
@@ -6,13 +7,38 @@ const createUser = async (req, res) => {
   try {
     const newUser = new Users(user);
     await newUser.save();
-    console.log(
-      "🚀 ~ file: userController.js:9 ~ createUser ~ newUser:",
-      newUser
-    );
     res.status(201).json({
       resStatus: res.status,
       message: "User Created SucessFully ",
+      user: newUser,
+    });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+};
+// For Loggin Users
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await Users.findOne({ email: email, password: password });
+    if (!user) {
+      res.status(404).json({
+        sucess: false,
+        message: "User Dosent Exists",
+      });
+    }
+    // const isMatch = await bcryptjs.compare(password, req.body.password);
+    // if (!isMatch) {
+    //   res.status(404).json({
+    //     sucess: false,
+    //     message: "Invalid Credential",
+    //   });
+    // }
+    const token = await Users.genratetoken();
+    res.status(200).json({
+      sucess: true,
+      user: user,
+      token,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -83,4 +109,5 @@ module.exports = {
   removeUser,
   updateUser,
   searchUser,
+  loginUser,
 };
