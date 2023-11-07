@@ -104,13 +104,10 @@ const removeUser = async (req, res) => {
 
     const deleteUser = await Users.findOneAndDelete({ email: email });
     if (deleteUser) {
-      res
-        .status(200)
-        .cookie("token", { expires: Date.now(), httpOnly: true })
-        .json({
-          sucess: true,
-          message: "Deleted SucessFully",
-        });
+      res.status(200).clearCookie("token").json({
+        sucess: true,
+        message: "Deleted SucessFully",
+      });
     }
   } catch (e) {
     res.status(500).json({
