@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ path: "./Secrets/.env" });
 const express = require("express");
 const multer = require("multer");
 const upload = multer();
@@ -7,6 +7,8 @@ const { router } = require("./Routers/router");
 const { userRouter } = require("./Routers/userRouter");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const { isLogin } = require("./Middlewares/auth");
+const { postRouter } = require("./Routers/postRouter");
 const app = express();
 const PORT = process.env.PORT || 5000;
 const corsOptions = {
@@ -24,6 +26,7 @@ app.get("/", (req, res) => {
 });
 app.use("/todos", router);
 app.use("/users", userRouter);
+app.use("/posts", isLogin, postRouter);
 
 const start = async (url) => {
   try {

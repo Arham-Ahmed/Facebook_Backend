@@ -1,4 +1,4 @@
-const Todos = require("../Models/todo_schema");
+const Todos = require("../Models/Todo");
 const addTodo = async (req, res) => {
   const todo = req.body;
   try {
