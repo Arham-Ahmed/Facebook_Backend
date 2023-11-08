@@ -4,8 +4,11 @@ const jwt = require("jsonwebtoken");
 const User = require("../Models/User");
 
 const Option = {
-  expires: new Date(Date.now() + 60 * 60 * 24 * 90),
+  expires: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
   httpOnly: true,
+  maxAge: 86_400_000,
+  sameSite: "none",
+  secure: true,
 };
 // For Creating Users
 const createUser = async (req, res) => {
@@ -16,46 +19,58 @@ const createUser = async (req, res) => {
     profile_photo: req.body.profilePhoto,
   };
   try {
+    const ExistsUser = await User.findOne({ email: user.email });
+    if (ExistsUser)
+      return res.status(400).json({
+        sucess: false,
+        message: "User Already Exists",
+      });
     const newUser = new Users(user);
+    await newUser.save();
     if (!newUser)
       return res
         .status(500)
         .json({ message: "Some Error Occur on Creating Account" });
-    await newUser.save();
-    const token = jwt.sign({ _id: newUser._id }, process.env.JWTSCERET);
-    if (!token) return res.status(500).json({ message: "Some Error Occur" });
-    res.status(201).cookie("token", token, Option).json({
+
+    res.status(201).json({
       resStatus: res.status,
       message: "User Created SucessFully ",
-      // token: token,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    return res.status(500).json({ error: e.message });
   }
 };
 // For Loggin Users
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
+  const UserBrowerToken = req.cookies;
   try {
     const user = await Users.findOne({ email: email }).select("+password");
     if (!user) {
-      res.status(404).json({
+      return res.status(401).json({
         sucess: false,
         message: "User Dosent Exists",
       });
     }
     const isMatch = await bcryptjs.compare(password, user.password);
     if (!isMatch) {
-      res.status(404).json({
+      return res.status(401).json({
         sucess: false,
-        message: "Invalid Credential",
+        message: "Invalid Password",
+      });
+    }
+    if (UserBrowerToken.token) {
+      return res.status(200).json({
+        sucess: true,
+        message: "Already LoggedIn",
       });
     }
     const token = jwt.sign({ _id: user._id }, process.env.JWTSCERET);
-    if (!token) return res.json({ message: "Something Went Wrong" });
-    return res.status(200).cookie("token", token, [Option]).json({
+    if (!token)
+      return res.status(500).json({ message: "Something Went Wrong" });
+    return res.status(200).cookie("token", token, Option).json({
       sucess: true,
-      message: "Logged in SucessFully",
+      message: "Loggin SucessFully",
       token,
     });
   } catch (e) {
@@ -65,13 +80,13 @@ const loginUser = async (req, res) => {
   }
 };
 const LogoutUser = async (req, res) => {
-  // const { token } = req.cookies;
+  const { token } = req.cookies;
 
   try {
-    // if (!token)
-    //   return res
-    //     .status(404)
-    //     .json({ sucess: false, message: "Unable To Delete Login First" });
+    if (!token)
+      return res
+        .status(404)
+        .json({ sucess: false, message: "Unable To Delete Login First" });
     return res.clearCookie("token").json({
       sucess: true,
       message: "Logout SucessFully",
@@ -135,7 +150,7 @@ const getallUsers = async (req, res) => {
   let AllUsers;
   AllUsers = await User.find({});
   if (email) {
-    AllUsers = await Users.find({ email: email });
+    AllUsers = await Users.find({ email: email }).select("+password");
   }
   if (name) {
     AllUsers = await Users.find({

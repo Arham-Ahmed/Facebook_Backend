@@ -19,8 +19,7 @@ const createPost = async (req, res) => {
     await user.save();
     res.status(201).json({
       resStatus: res.status,
-      message: "User Created SucessFully ",
-      user: newPost,
+      message: "Post Created SucessFully ",
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -29,7 +28,8 @@ const createPost = async (req, res) => {
 
 const getallPost = async (req, res) => {
   try {
-    const posts = (await Post.find({})).reverse();
+    const posts = await Post.find({}).sort();
+    if (posts.length === 0) return res.json({ message: "No Posts Available" });
     res.status(200).json({
       sucess: true,
       resStatus: res.status,
@@ -49,12 +49,14 @@ const removePost = async (req, res) => {
     const post = await Post.findByIdAndDelete({ _id: id });
     if (!post)
       return res.status(404).json({ sucess: false, message: "Post are Empty" });
-    const posts = (await Post.find({})).reverse();
     res.status(200).json({
       sucess: true,
       message: "Post Deleted Sucessfully",
-      DeletedPost: post,
     });
+    const user = await User.findById({ _id: req.user.id });
+    const indexofPost = user.posts.indexOf(post._id);
+    user.posts.splice(indexofPost, 1);
+    await user.save();
   } catch (error) {
     res.status(500).json({
       sucess: false,

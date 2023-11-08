@@ -7,7 +7,7 @@ const { router } = require("./Routers/router");
 const { userRouter } = require("./Routers/userRouter");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const { isLogin } = require("./Middlewares/auth");
+const { isauthenticated } = require("./Middlewares/auth");
 const { postRouter } = require("./Routers/postRouter");
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
 });
 app.use("/todos", router);
 app.use("/users", userRouter);
-app.use("/posts", isLogin, postRouter);
+app.use("/posts", isauthenticated, postRouter);
 
 const start = async (url) => {
   try {
