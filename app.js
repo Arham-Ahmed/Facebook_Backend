@@ -12,14 +12,14 @@ const { postRouter } = require("./Routers/postRouter");
 const app = express();
 const PORT = process.env.PORT || 5000;
 const corsOptions = {
-  origin: `*`,
-  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  origin: ["http://localhost:3000", "*"],
+  credentials: true,
 };
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(upload.none());
-app.use(cookieParser());
 app.use(cors(corsOptions));
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("Welcome to Todo app using Node js");

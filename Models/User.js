@@ -45,6 +45,12 @@ const UserSchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+  todos: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Todos",
+    },
+  ],
   token: [String],
 });
 UserSchema.pre("save", async function (next) {

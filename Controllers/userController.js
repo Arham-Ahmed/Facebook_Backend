@@ -1,12 +1,10 @@
 const Users = require("../Models/User");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../Models/User");
 
 const Option = {
-  expires: Math.floor(Date.now() / 1000) + 60 * 60 * 24,
-  httpOnly: true,
   maxAge: 86_400_000,
+  httpOnly: true,
   sameSite: "none",
   secure: true,
 };
@@ -19,7 +17,7 @@ const createUser = async (req, res) => {
     profile_photo: req.body.profilePhoto,
   };
   try {
-    const ExistsUser = await User.findOne({ email: user.email });
+    const ExistsUser = await Users.findOne({ email: user.email });
     if (ExistsUser)
       return res.status(400).json({
         sucess: false,
@@ -68,10 +66,11 @@ const loginUser = async (req, res) => {
     const token = jwt.sign({ _id: user._id }, process.env.JWTSCERET);
     if (!token)
       return res.status(500).json({ message: "Something Went Wrong" });
-    return res.status(200).cookie("token", token, Option).json({
+
+    res.status(200).cookie("token", token, [Option]).json({
       sucess: true,
       message: "Loggin SucessFully",
-      token,
+      token: req.cookies.token,
     });
   } catch (e) {
     return res.status(500).json({
@@ -85,8 +84,8 @@ const LogoutUser = async (req, res) => {
   try {
     if (!token)
       return res
-        .status(404)
-        .json({ sucess: false, message: "Unable To Delete Login First" });
+        .status(401)
+        .json({ sucess: false, message: "Unable To Logout Login First" });
     return res.clearCookie("token").json({
       sucess: true,
       message: "Logout SucessFully",
@@ -132,9 +131,16 @@ const removeUser = async (req, res) => {
 };
 // For Updating Users
 const updateUser = async (req, res) => {
-  const { email, password, id } = req.body;
+  const { email, name } = req.body;
   try {
-    await Todos.findOneAndUpdate({ _id: user_id }, User);
+    const UpdatedUser = await Users.findOneAndUpdate(
+      { _id: user_id },
+      { email, name }
+    );
+    if (!UpdatedUser)
+      return res
+        .status(500)
+        .json({ sucess: false, message: "Some Error Occured" });
     res
       .status(200)
       .json({ resStatus: res.status, message: "Updation SucessFully" });
@@ -148,7 +154,7 @@ const updateUser = async (req, res) => {
 const getallUsers = async (req, res) => {
   const { email, name } = req.query;
   let AllUsers;
-  AllUsers = await User.find({});
+  AllUsers = await Users.find({});
   if (email) {
     AllUsers = await Users.find({ email: email }).select("+password");
   }

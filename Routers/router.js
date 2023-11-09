@@ -7,13 +7,14 @@ const {
   searchTodo,
 } = require("../Controllers/controller");
 const multer = require("multer");
+const { isauthenticated } = require("../Middlewares/auth");
 const router = express.Router();
 
 router
-  .get("/", getallTodo)
-  .get("/search", searchTodo)
-  .post("/add", addTodo)
-  .delete("/remove/:id", removeTodo)
-  .put("/update", updateTodo);
+  .get("/", isauthenticated, getallTodo)
+  .get("/search", isauthenticated, searchTodo)
+  .post("/add", isauthenticated, addTodo)
+  .delete("/remove/:id", isauthenticated, removeTodo)
+  .put("/update", isauthenticated, updateTodo);
 
 module.exports = { router };

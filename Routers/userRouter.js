@@ -14,7 +14,7 @@ userRouter
   .get("/", getallUsers)
   .post("/register", createUser)
   .post("/login", loginUser)
-  .post("/logout", LogoutUser)
+  .get("/logout", LogoutUser)
   .delete("/delete", isauthenticated, removeUser)
   .put("/update-user", updateUser);
 

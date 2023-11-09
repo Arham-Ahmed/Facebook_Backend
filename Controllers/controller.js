@@ -1,9 +1,13 @@
 const Todos = require("../Models/Todo");
+const User = require("../Models/User");
 const addTodo = async (req, res) => {
   const todo = req.body;
   try {
     const newTodo = new Todos(todo);
+    const user = await User.findOne(req.user._id);
+    user.todos.push(newTodo);
     await newTodo.save();
+    await user.save();
     res.status(201).json({
       resStatus: res.status,
       message: "Data Submitied",
@@ -46,14 +50,14 @@ const updateTodo = async (req, res) => {
 };
 const getallTodo = async (req, res) => {
   try {
-    TodosData = (await Todos.find({})).reverse();
+    TodosData = await Todos.find({});
     res.status(200).json({
       resStatus: res.status,
       Todos: TodosData,
     });
   } catch (error) {
     res.status(500).json({
-      message: e.message,
+      message: error.message,
     });
   }
 };
