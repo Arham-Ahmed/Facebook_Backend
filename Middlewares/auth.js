@@ -1,6 +1,7 @@
 require("dotenv").config({ path: "../Secrets/.env" });
 const jwt = require("jsonwebtoken");
 const Users = require("../Models/User");
+const User = require("../Models/User");
 const JWTSCERET = process.env.JWTSCERET;
 const isauthenticated = async (req, res, next) => {
   const { token } = req.cookies;
@@ -17,6 +18,11 @@ const isauthenticated = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: "Server Error Plz Try again" });
     req.user = await Users.findById(decode._id);
+    const user = await User.findById(req.id);
+    if (!user)
+      return res
+        .status(401)
+        .json({ success: false, message: "Does not Find The User" });
   } catch (error) {
     res.status(500).json({
       success: false,
