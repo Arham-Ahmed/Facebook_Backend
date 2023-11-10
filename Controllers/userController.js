@@ -7,6 +7,7 @@ const Option = {
   httpOnly: true,
   sameSite: "none",
   secure: true,
+  expire: Date.now() * 90,
 };
 // For Creating Users
 const createUser = async (req, res) => {
@@ -41,7 +42,6 @@ const createUser = async (req, res) => {
 // For Loggin Users
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
-  const UserBrowerToken = req.cookies;
   try {
     const user = await Users.findOne({ email: email }).select("+password");
     if (!user) {
@@ -57,12 +57,6 @@ const loginUser = async (req, res) => {
         message: "Invalid Password",
       });
     }
-    // if (UserBrowerToken.token) {
-    //   return res.status(200).json({
-    //     sucess: true,
-    //     message: "Already LoggedIn",
-    //   });
-    // }
     const token = jwt.sign({ _id: user._id }, process.env.JWTSCERET);
     if (!token)
       return res.status(500).json({ message: "Something Went Wrong" });
@@ -70,7 +64,7 @@ const loginUser = async (req, res) => {
     res.status(200).cookie("token", token, [Option]).json({
       sucess: true,
       message: "Loggin SucessFully",
-      token: req.cookies.token,
+      token,
     });
   } catch (e) {
     return res.status(500).json({

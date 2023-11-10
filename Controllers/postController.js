@@ -27,8 +27,18 @@ const createPost = async (req, res) => {
 };
 
 const getallPost = async (req, res) => {
+  const { id, name, email } = req.body;
   try {
     const posts = await Post.find({}).sort();
+    if (id) {
+      const posts = await Post.find({}).sort();
+    }
+    if (name) {
+      const posts = await Post.find({}).sort();
+    }
+    if (email) {
+      const posts = await Post.find({}).sort();
+    }
     if (posts.length === 0) return res.json({ message: "No Posts Available" });
     res.status(200).json({
       sucess: true,
