@@ -45,6 +45,7 @@ const isLogin = async (req, res, next) => {
       .status(404)
       .json({ success: false, message: "Server Error Plz Try again" });
   req.user = await Users.findById(decode._id);
+  console.log("🚀 ~ file: auth.js:48 ~ isLogin ~ req.user:", req.user);
   next();
 };
 module.exports = { isauthenticated, isLogin };
