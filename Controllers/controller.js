@@ -54,7 +54,12 @@ const updateTodo = async (req, res) => {
 };
 const getallTodo = async (req, res) => {
   try {
-    TodosData = await Todos.find({});
+    const user = await User.findOne(req.user._id).populate("todos");
+    if (!user)
+      return res.status(404).json({ sucess: false, message: "User Not Found" });
+    // TodosData = await Todos.find({});
+    TodosData = user.todos;
+    // console.log("🚀 ~ file: controller.js:58 ~ getallTodo ~ TodosData:", user);
     res.status(200).json({
       resStatus: res.status,
       Todos: TodosData,

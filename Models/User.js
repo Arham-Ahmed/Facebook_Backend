@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 const Post = require("./Post");
+const Todo = require("./Todo");
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -30,7 +31,7 @@ const UserSchema = new mongoose.Schema({
   posts: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
+      ref: "post",
     },
   ],
   followers: [
@@ -48,7 +49,7 @@ const UserSchema = new mongoose.Schema({
   todos: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Todos",
+      ref: "todo",
     },
   ],
   token: [String],

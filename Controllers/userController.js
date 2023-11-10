@@ -57,12 +57,12 @@ const loginUser = async (req, res) => {
         message: "Invalid Password",
       });
     }
-    if (UserBrowerToken.token) {
-      return res.status(200).json({
-        sucess: true,
-        message: "Already LoggedIn",
-      });
-    }
+    // if (UserBrowerToken.token) {
+    //   return res.status(200).json({
+    //     sucess: true,
+    //     message: "Already LoggedIn",
+    //   });
+    // }
     const token = jwt.sign({ _id: user._id }, process.env.JWTSCERET);
     if (!token)
       return res.status(500).json({ message: "Something Went Wrong" });
