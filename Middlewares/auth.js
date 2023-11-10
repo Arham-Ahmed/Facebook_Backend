@@ -5,7 +5,6 @@ const User = require("../Models/User");
 const JWTSCERET = process.env.JWTSCERET;
 const isauthenticated = async (req, res, next) => {
   const { token } = req.cookies;
-  console.log("🚀 ~ file: auth.js:7 ~ isauthenticated ~ token:", req.cookie);
   try {
     if (!token) {
       return res
@@ -18,7 +17,7 @@ const isauthenticated = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: "Server Error Plz Try again" });
     req.user = await Users.findById(decode._id);
-    const user = await User.findById(req.id);
+    const user = await User.findById(req.user._id);
     if (!user)
       return res
         .status(401)

@@ -11,20 +11,25 @@ const { isauthenticated } = require("./Middlewares/auth");
 const { postRouter } = require("./Routers/postRouter");
 const app = express();
 const PORT = process.env.PORT || 5000;
-const corsOptions = {
-  origin: ["http://localhost:3000", "*"],
-  credentials: true,
-};
+const corsOptions = {};
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(upload.none());
-app.use(cors(corsOptions));
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "*"],
+    credentials: true,
+    // methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"],
+    // preflightContinue: false,
+    // optionsSuccessStatus: 204,
+  })
+);
 app.use(cookieParser());
 
 app.get("/", (req, res) => {
   res.send("Welcome to Todo app using Node js");
 });
-app.use("/todos", router);
+app.use("/todos", isauthenticated, router);
 app.use("/users", userRouter);
 app.use("/posts", isauthenticated, postRouter);
 

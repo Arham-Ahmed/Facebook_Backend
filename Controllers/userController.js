@@ -134,8 +134,8 @@ const updateUser = async (req, res) => {
   const { email, name } = req.body;
   try {
     const UpdatedUser = await Users.findOneAndUpdate(
-      { _id: user_id },
-      { email, name }
+      { _id: req.user._id },
+      { name: name, email: email }
     );
     if (!UpdatedUser)
       return res

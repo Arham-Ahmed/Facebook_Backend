@@ -11,11 +11,11 @@ const { isauthenticated, isLogin } = require("../Middlewares/auth");
 const userRouter = express.Router();
 
 userRouter
-  .get("/", getallUsers)
+  .get("/", isauthenticated, getallUsers)
   .post("/register", createUser)
   .post("/login", loginUser)
-  .get("/logout", LogoutUser)
+  .get("/logout", isauthenticated, LogoutUser)
   .delete("/delete", isauthenticated, removeUser)
-  .put("/update-user", updateUser);
+  .put("/update-user", isauthenticated, updateUser);
 
 module.exports = { userRouter };
