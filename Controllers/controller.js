@@ -20,6 +20,10 @@ const removeTodo = async (req, res) => {
   const todo_iD = req.params.id;
   try {
     await Todos.findOneAndDelete({ _id: todo_iD });
+    const user = await User.findById(req.user._id);
+    const todoIndex = user.todos.indexOf(todo_iD);
+    user.todos.splice(todoIndex, 1);
+    await user.save();
     res.status(200).json({
       resStatus: res.status,
       message: "Deleted SucessFully",
