@@ -13,7 +13,7 @@ const userRouter = express.Router();
 
 userRouter
   .get("/", isauthenticated, getallUsers)
-  .get("/", isauthenticated, userCall)
+  .get("/user", isauthenticated, userCall)
   .post("/register", createUser)
   .post("/login", loginUser)
   .get("/logout", isauthenticated, LogoutUser)

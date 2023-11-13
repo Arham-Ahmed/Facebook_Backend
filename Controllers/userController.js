@@ -179,11 +179,15 @@ const getallUsers = async (req, res) => {
   }
 };
 const userCall = async (req, res) => {
-  const user = req.user;
+  const user_id = req.user._id;
+  const user = await User.findById({ _id: user_id }).populate([
+    "todos",
+    "posts",
+  ]);
   try {
     return res.status(200).json({
       resStatus: res.status,
-      Users: user,
+      User: user,
     });
   } catch (error) {
     return res.status(500).json({
