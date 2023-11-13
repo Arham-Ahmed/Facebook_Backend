@@ -1,5 +1,6 @@
 const express = require("express");
 const {
+  userCall,
   createUser,
   getallUsers,
   removeUser,
@@ -12,6 +13,7 @@ const userRouter = express.Router();
 
 userRouter
   .get("/", isauthenticated, getallUsers)
+  .get("/", isauthenticated, userCall)
   .post("/register", createUser)
   .post("/login", loginUser)
   .get("/logout", isauthenticated, LogoutUser)

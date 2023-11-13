@@ -1,13 +1,14 @@
 const Users = require("../Models/User");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const User = require("../Models/User");
 
 const Option = {
-  maxAge: 86_400_000,
+  maxAge: 90 * 24 * 60 * 60 * 1000,
   httpOnly: true,
   sameSite: "none",
   secure: true,
-  expire: Date.now() * 90,
+  Expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
 };
 // For Creating Users
 const createUser = async (req, res) => {
@@ -61,7 +62,7 @@ const loginUser = async (req, res) => {
     if (!token)
       return res.status(500).json({ message: "Something Went Wrong" });
 
-    res.status(200).cookie("token", token, [Option]).json({
+    res.status(200).cookie("token", token, Option).json({
       sucess: true,
       message: "Loggin SucessFully",
       token,
@@ -76,12 +77,17 @@ const loginUser = async (req, res) => {
 };
 const LogoutUser = async (req, res) => {
   const { token } = req.cookies;
-
   try {
     if (!token)
       return res
         .status(401)
         .json({ sucess: false, message: "Unable To Logout Login First" });
+
+    const user = await User.findById({ _id: req.user._id });
+    if (!user)
+      return res.status(401).json({ sucess: false, message: "UnAuthorized" });
+    user.token = user.token.filter((elem) => elem !== token);
+    await user.save();
     return res.clearCookie("token").json({
       sucess: true,
       message: "Logout SucessFully",
@@ -172,6 +178,19 @@ const getallUsers = async (req, res) => {
     });
   }
 };
+const userCall = async (req, res) => {
+  const user = req.user;
+  try {
+    return res.status(200).json({
+      resStatus: res.status,
+      Users: user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 
 module.exports = {
   createUser,
@@ -180,4 +199,5 @@ module.exports = {
   updateUser,
   loginUser,
   LogoutUser,
+  userCall,
 };
