@@ -8,7 +8,7 @@ const {
   LogoutUser,
   loginUser,
 } = require("../Controllers/userController");
-const { isauthenticated, isLogin } = require("../Middlewares/auth");
+const { isauthenticated } = require("../Middlewares/auth");
 const userRouter = express.Router();
 
 userRouter

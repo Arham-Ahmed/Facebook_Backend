@@ -12,8 +12,7 @@ const { postRouter } = require("./Routers/postRouter");
 const { rateLimit } = require("express-rate-limit");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-const corsOptions = {};
+const PORT = process?.env?.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(upload.none());
@@ -21,20 +20,15 @@ app.use(
   cors({
     origin: ["http://localhost:3000", "http://192.168.0.116:3000", "*"],
     credentials: true,
-    // methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"],
-    // preflightContinue: false,
-    // optionsSuccessStatus: 204,
   })
 );
 app.use(cookieParser());
 
 const limiter = rateLimit({
-  windowMs: 60 * 1000, // 15 minutes
+  windowMs: 60 * 1000, // 1 minutes
   limit: 300, //Limit
   headers: true,
   message: `Your can do 350 request per min`,
-  // standardHeaders: "draft-7",
-  // legacyHeaders: false,  //both work same as header
 });
 
 app.use(limiter);

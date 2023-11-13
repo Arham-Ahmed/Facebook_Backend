@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
-const Post = require("./Post");
-const Todo = require("./Todo");
+const Joi = require("joi");
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -24,7 +23,7 @@ const UserSchema = new mongoose.Schema({
     default:
       "https://www.iprcenter.gov/image-repository/blank-profile-picture.png/@@images/image.png",
   },
-  phone: {
+  phoneNumber: {
     type: String,
     min: [11, "Plz Enter a valid number"],
   },
@@ -52,6 +51,10 @@ const UserSchema = new mongoose.Schema({
       ref: "todo",
     },
   ],
+  role: {
+    type: String,
+    default: "user",
+  },
   token: [String],
 });
 UserSchema.pre("save", async function (next) {
@@ -59,6 +62,37 @@ UserSchema.pre("save", async function (next) {
     const hash = await bcryptjs.hash(this.password, 8);
     this.password = hash;
   }
+  next();
 });
+UserSchema.methods.JoiValidation = () => {
+  let schema = {
+    name: Joi.types
+      .String()
+      .alphanum()
+      .min(6)
+      .max(20)
+      .trim(true)
+      .regex(/^[^\s]+$/)
+      .required(),
+    email: Joi.types
+      .String()
+      .email()
+      .trim(true)
+      .regex(/^[^\s]+$/)
+      .required(),
+    password: Joi.types
+      .String()
+      .trim(true)
+      .min(6)
+      .max(20)
+      .regex(/^[^\s]+$/)
+      .required(),
+    phoneNumber: Joi.string()
+      .length(10)
+      .pattern(/[6-9]{1}[0-9]{9}/)
+      .required(),
+  };
+  return Joi.validate(obj, schema);
+};
 
 module.exports = mongoose.model("user", UserSchema);
