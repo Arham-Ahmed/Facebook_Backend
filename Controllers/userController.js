@@ -180,17 +180,17 @@ const getallUsers = async (req, res) => {
 };
 const userCall = async (req, res) => {
   const user_id = req.user._id;
-  const user = await User.findById({ _id: user_id }).populate([
-    "todos",
-    "posts",
-  ]);
+  const user = await User.findById({ _id: user_id })
+    .select("-token")
+    .populate(["todos", "posts"]);
   try {
     return res.status(200).json({
-      resStatus: res.status,
+      success: true,
       User: user,
     });
   } catch (error) {
     return res.status(500).json({
+      success: false,
       message: error.message,
     });
   }

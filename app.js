@@ -9,6 +9,8 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { isauthenticated } = require("./Middlewares/auth");
 const { postRouter } = require("./Routers/postRouter");
+const { rateLimit } = require("express-rate-limit");
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 const corsOptions = {};
@@ -17,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(upload.none());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "*"],
+    origin: ["http://localhost:3000", "http://192.168.0.116:3000", "*"],
     credentials: true,
     // methods: ["GET", "POST", "DELETE", "UPDATE", "PUT", "PATCH"],
     // preflightContinue: false,
@@ -25,6 +27,17 @@ app.use(
   })
 );
 app.use(cookieParser());
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 15 minutes
+  limit: 300, //Limit
+  headers: true,
+  message: `Your can do 350 request per min`,
+  // standardHeaders: "draft-7",
+  // legacyHeaders: false,  //both work same as header
+});
+
+app.use(limiter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Todo app using Node js");
