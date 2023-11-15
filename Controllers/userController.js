@@ -71,6 +71,7 @@ const loginUser = async (req, res) => {
       user_id: user._id,
     });
     await newToken?.save();
+    user.token.push(newToken._id);
     await user.save();
 
     res.status(200)?.cookie("token", token, Option)?.json({
@@ -190,10 +191,14 @@ const getallUsers = async (req, res) => {
 };
 const userCall = async (req, res) => {
   const user_id = req?.user?._id;
-  const user = await User?.findById({ _id: user_id })
-    .select("-token")
-    .select("-role")
-    .populate(["todos", "posts"]);
+  const user = await User?.findById({ _id: user_id }).select([
+    "-todos",
+    "-token",
+    "-role",
+    "-posts",
+    "-followers",
+    "-following",
+  ]);
   try {
     return res.status(200).json({
       success: true,

@@ -53,9 +53,9 @@ const start = async (url) => {
         `Listening on port`,
         "\x1b[36m",
         // "\x1b[1m",
-        "\x1b[4m",
+        // "\x1b[4m",
         "\x1b[5m",
-        "http://localhost:5000/",
+        "http://localhost:5000",
         "\x1b[0m"
       );
     });
