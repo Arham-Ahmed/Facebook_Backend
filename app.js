@@ -18,7 +18,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(upload.none());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://192.168.0.116:3000", "*"],
+    origin: [
+      "http://localhost:3000",
+      "http://192.168.0.228:3000",
+      "http://192.168.0.130:3000",
+      "*",
+    ],
     credentials: true,
   })
 );
@@ -26,12 +31,12 @@ app.use(cookieParser());
 
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minutes
-  limit: 300, //Limit
+  limit: 400, //Limit
   headers: true,
   message: `Your can do 350 request per min`,
 });
 
-app.use(limiter);
+// app.use(limiter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to Todo app using Node js");
@@ -43,14 +48,23 @@ app.use("/posts", isauthenticated, postRouter);
 const start = async (url) => {
   try {
     app.listen(PORT, () => {
-      console.log(`Listening on ${PORT}`);
+      console.log(
+        "\x1b[39m",
+        `Listening on port`,
+        "\x1b[36m",
+        // "\x1b[1m",
+        "\x1b[4m",
+        "\x1b[5m",
+        "http://localhost:5000/",
+        "\x1b[0m"
+      );
     });
     await ConnectDb(process.env.MONGODB_URI);
     // console.log("Connected");
     if (ConnectDb) {
-      console.log("Connected");
+      console.log("\x1b[32m", "Connected");
     } else {
-      console.log("not Connected");
+      console.log("\x1b[31m", "not Connected");
     }
   } catch (error) {
     console.log(error);

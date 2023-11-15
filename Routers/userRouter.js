@@ -8,11 +8,11 @@ const {
   LogoutUser,
   loginUser,
 } = require("../Controllers/userController");
-const { isauthenticated } = require("../Middlewares/auth");
+const { isauthenticated, hasRole } = require("../Middlewares/auth");
 const userRouter = express.Router();
 
 userRouter
-  .get("/", isauthenticated, getallUsers)
+  .get("/", isauthenticated, hasRole, getallUsers)
   .get("/user", isauthenticated, userCall)
   .post("/register", createUser)
   .post("/login", loginUser)

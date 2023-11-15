@@ -6,6 +6,7 @@ const addTodo = async (req, res) => {
     const newTodo = new Todos(todo);
     const user = await User?.findOne(req.user._id);
     user?.todos?.push(newTodo);
+    newTodo.owner = user._id;
     await newTodo?.save();
     await user?.save();
     res.status(201)?.json({

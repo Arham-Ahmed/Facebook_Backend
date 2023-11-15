@@ -2,6 +2,7 @@ const Users = require("../Models/User");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../Models/User");
+const Token = require("../Models/Token");
 
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
@@ -9,7 +10,7 @@ const Option = {
   sameSite: "none",
   secure: true,
   Expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
-  path: "http://localhost:5000/users/user",
+  // path: "http://localhost:5000/users/user",
 };
 // For Creating Users
 const createUser = async (req, res) => {
@@ -45,6 +46,7 @@ const createUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
+
     const user = await Users?.findOne({ email: email })?.select("+password");
     if (!user) {
       return res.status(401).json({
@@ -63,12 +65,19 @@ const loginUser = async (req, res) => {
     if (!token)
       return res.status(500).json({ message: "Something Went Wrong" });
 
+    const newToken = new Token({
+      token: token,
+      Device: req?.headers["user-agent"],
+      user_id: user._id,
+    });
+    await newToken?.save();
+    await user.save();
+
     res.status(200)?.cookie("token", token, Option)?.json({
       sucess: true,
       message: "Loggin SucessFully",
       token,
     });
-    user.token?.push(token);
     await user?.save();
   } catch (e) {
     return res?.status(500)?.json({
@@ -183,6 +192,7 @@ const userCall = async (req, res) => {
   const user_id = req?.user?._id;
   const user = await User?.findById({ _id: user_id })
     .select("-token")
+    .select("-role")
     .populate(["todos", "posts"]);
   try {
     return res.status(200).json({

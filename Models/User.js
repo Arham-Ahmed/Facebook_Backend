@@ -30,7 +30,7 @@ const UserSchema = new mongoose.Schema({
   posts: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "post",
+      ref: "Post",
     },
   ],
   followers: [
@@ -48,14 +48,19 @@ const UserSchema = new mongoose.Schema({
   todos: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "todo",
+      ref: "Todo",
     },
   ],
   role: {
     type: String,
     default: "user",
   },
-  token: [String],
+  token: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Token",
+    },
+  ],
 });
 UserSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
@@ -95,4 +100,4 @@ UserSchema.methods.JoiValidation = () => {
   return Joi.validate(obj, schema);
 };
 
-module.exports = mongoose.model("user", UserSchema);
+module.exports = mongoose.model("User", UserSchema);

@@ -34,5 +34,13 @@ const isauthenticated = async (req, res, next) => {
   next();
 };
 
-const hasRole = async (req, res, next) => {};
-module.exports = { isauthenticated };
+const hasRole = async (req, res, next) => {
+  if (req?.user?.role !== "admin")
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized",
+    });
+
+  next();
+};
+module.exports = { isauthenticated, hasRole };
