@@ -145,15 +145,20 @@ const removeUser = async (req, res) => {
 // For Updating Users
 const updateUser = async (req, res) => {
   try {
-    const { email, name, profile_photo } = req?.body;
+    console.log(req.files);
+
+    const { email, name } = req?.body;
     const UpdatedUser = await Users?.findOneAndUpdate(
       { _id: req?.user?._id },
       { name: name, email: email }
     );
+
     if (!UpdatedUser)
       return res
         .status(500)
         .json({ sucess: false, message: "Some Error Occured" });
+    UpdatedUser.profile_photo.push(req?.files?.profile_photo[0]?.filename);
+    await UpdatedUser?.save();
     res
       .status(200)
       .json({ resStatus: res.status, message: "Updation SucessFully" });

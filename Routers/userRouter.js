@@ -29,6 +29,16 @@ userRouter
   .post("/login", multi, loginUser)
   .get("/logout", multi, isauthenticated, LogoutUser)
   .delete("/delete", multi, isauthenticated, removeUser)
-  .put("/update-user", multi, isauthenticated, updateUser);
+  .put(
+    "/update-user",
+    upload.fields([
+      {
+        name: "profile_photo",
+        maxCount: 5,
+      },
+    ]),
+    isauthenticated,
+    updateUser
+  );
 
 module.exports = { userRouter };
