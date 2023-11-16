@@ -14,7 +14,7 @@ const { multi } = require("../utils/multiupload");
 const userRouter = express.Router();
 
 userRouter
-  .get("/", multi, isauthenticated, hasRole, getallUsers)
+  .get("/", multi, isauthenticated, getallUsers)
   .get("/user", multi, isauthenticated, userCall)
   .post(
     "/register",

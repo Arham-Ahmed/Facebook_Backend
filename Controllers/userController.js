@@ -145,9 +145,9 @@ const removeUser = async (req, res) => {
 // For Updating Users
 const updateUser = async (req, res) => {
   try {
-    const { email, name } = req?.body;
+    const { email, name, profile_photo } = req?.body;
     const UpdatedUser = await Users?.findOneAndUpdate(
-      { _id: req.user._id },
+      { _id: req?.user?._id },
       { name: name, email: email }
     );
     if (!UpdatedUser)
