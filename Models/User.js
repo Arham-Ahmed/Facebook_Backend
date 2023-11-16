@@ -18,11 +18,13 @@ const UserSchema = new mongoose.Schema({
     min: [20, "Password must be Shorter than 20 Character"],
     select: false,
   },
-  profile_photo: {
-    type: String,
-    default:
-      "https://www.iprcenter.gov/image-repository/blank-profile-picture.png/@@images/image.png",
-  },
+  profile_photo: [
+    {
+      type: String,
+      default:
+        "https://cfd.nu.edu.pk/wp-content/uploads/2020/05/5906-e1646889042179-290x333.jpg",
+    },
+  ],
   phoneNumber: {
     type: String,
     min: [11, "Plz Enter a valid number"],

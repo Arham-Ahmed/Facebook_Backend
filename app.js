@@ -1,21 +1,22 @@
 require("dotenv").config({ path: "./Secrets/.env" });
 const express = require("express");
-const multer = require("multer");
-const upload = multer();
 const ConnectDb = require("./db/connect");
-const { router } = require("./Routers/router");
-const { userRouter } = require("./Routers/userRouter");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const path = require("path");
+
+// Routes
+const { router } = require("./Routers/router");
+const { userRouter } = require("./Routers/userRouter");
 const { isauthenticated } = require("./Middlewares/auth");
 const { postRouter } = require("./Routers/postRouter");
 const { rateLimit } = require("express-rate-limit");
 
+// middelware
 const app = express();
 const PORT = process?.env?.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(upload.none());
 app.use(
   cors({
     origin: [
@@ -28,7 +29,6 @@ app.use(
   })
 );
 app.use(cookieParser());
-
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minutes
   limit: 400, //Limit
@@ -38,12 +38,15 @@ const limiter = rateLimit({
 
 // app.use(limiter);
 
+// Api Call
 app.get("/", (req, res) => {
   res.send("Welcome to Todo app using Node js");
 });
 app.use("/todos", isauthenticated, router);
 app.use("/users", userRouter);
 app.use("/posts", isauthenticated, postRouter);
+
+// Server Function
 
 const start = async (url) => {
   try {
