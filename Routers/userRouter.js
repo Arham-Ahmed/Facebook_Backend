@@ -10,11 +10,12 @@ const {
 } = require("../Controllers/userController");
 const { isauthenticated, hasRole } = require("../Middlewares/auth");
 const { upload } = require("../utils/upload");
+const { multi } = require("../utils/multiupload");
 const userRouter = express.Router();
 
 userRouter
-  .get("/", isauthenticated, hasRole, getallUsers)
-  .get("/user", isauthenticated, userCall)
+  .get("/", multi, isauthenticated, hasRole, getallUsers)
+  .get("/user", multi, isauthenticated, userCall)
   .post(
     "/register",
     upload.fields([
@@ -25,9 +26,9 @@ userRouter
     ]),
     createUser
   )
-  .post("/login", loginUser)
-  .get("/logout", isauthenticated, LogoutUser)
-  .delete("/delete", isauthenticated, removeUser)
-  .put("/update-user", isauthenticated, updateUser);
+  .post("/login", multi, loginUser)
+  .get("/logout", multi, isauthenticated, LogoutUser)
+  .delete("/delete", multi, isauthenticated, removeUser)
+  .put("/update-user", multi, isauthenticated, updateUser);
 
 module.exports = { userRouter };

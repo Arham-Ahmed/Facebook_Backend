@@ -19,9 +19,9 @@ const createUser = async (req, res) => {
       name: req?.body?.name,
       email: req?.body?.email,
       password: req?.body?.password,
-      profile_photo: req?.body?.profilePhoto,
+      profile_photo: req?.files?.profile_photo[0]?.filename,
     };
-    const ExistsUser = await Users?.findOne({ email: user.email });
+    const ExistsUser = await Users?.findOne({ email: user?.email });
     if (ExistsUser)
       return res.status(400).json({
         sucess: false,

@@ -4,6 +4,7 @@ const ConnectDb = require("./db/connect");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+// const multer = require("multer");
 
 // Routes
 const { router } = require("./Routers/router");
@@ -13,6 +14,7 @@ const { postRouter } = require("./Routers/postRouter");
 const { rateLimit } = require("express-rate-limit");
 
 // middelware
+
 const app = express();
 const PORT = process?.env?.PORT || 5000;
 app.use(express.json());
@@ -28,6 +30,9 @@ app.use(
     credentials: true,
   })
 );
+
+// app.use(multer().none());
+
 app.use(cookieParser());
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minutes
@@ -45,6 +50,7 @@ app.get("/", (req, res) => {
 app.use("/todos", isauthenticated, router);
 app.use("/users", userRouter);
 app.use("/posts", isauthenticated, postRouter);
+app.use(express.static(path.join(__dirname, "public/images")));
 
 // Server Function
 
