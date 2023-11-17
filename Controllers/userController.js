@@ -1,7 +1,6 @@
 const Users = require("../Models/User");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require("../Models/User");
 const Token = require("../Models/Token");
 
 const Option = {
@@ -70,10 +69,10 @@ const loginUser = async (req, res) => {
     const newToken = new Token({
       token: token,
       Device: req?.headers["user-agent"],
-      user_id: user._id,
+      user_id: user?._id,
     });
     await newToken?.save();
-    user.token.push(newToken._id);
+    user.token.push(newToken?._id);
     await user.save();
 
     res
@@ -82,7 +81,7 @@ const loginUser = async (req, res) => {
       ?.json({
         sucess: true,
         message: "Loggin SucessFully",
-        user: await User.findById({ _id: user.id }).select([
+        user: await Users.findById({ _id: user?.id }).select([
           "-password",
           "-role",
           "-token",
@@ -104,7 +103,7 @@ const LogoutUser = async (req, res) => {
         .status(401)
         .json({ sucess: false, message: "Unable To Logout Login First" });
 
-    const user = await User?.findById({ _id: req.user._id });
+    const user = await Users?.findById({ _id: req.user?._id });
     if (!user)
       return res.status(401).json({ sucess: false, message: "UnAuthorized" });
     user.token = user?.token?.filter((elem) => elem !== token);
@@ -116,7 +115,7 @@ const LogoutUser = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       sucess: false,
-      message: error.message,
+      message: error?.message,
     });
   }
 };
@@ -131,7 +130,7 @@ const removeUser = async (req, res) => {
         message: "User Dosent Exists",
       });
     }
-    const isMatch = await bcryptjs?.compare(password, user.password);
+    const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch) {
       res.status(404).json({
         sucess: false,
@@ -148,7 +147,7 @@ const removeUser = async (req, res) => {
     }
   } catch (e) {
     res.status(500).json({
-      error: e.message,
+      error: e?.message,
     });
   }
 };
@@ -206,7 +205,7 @@ const getallUsers = async (req, res) => {
 };
 const userCall = async (req, res) => {
   const user_id = req?.user?._id;
-  const user = await User?.findById({ _id: user_id })
+  const user = await Users?.findById({ _id: user_id })
     .select(["-token", "-role", "-password"])
     .populate(["todos", "posts"]);
   try {
