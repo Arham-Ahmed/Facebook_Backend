@@ -54,7 +54,7 @@ const loginUser = async (req, res) => {
         message: "User Dosent Exists",
       });
     }
-    const isMatch = await bcryptjs?.compare(password, user.password);
+    const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch) {
       return res.status(401).json({
         sucess: false,

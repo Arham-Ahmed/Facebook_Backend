@@ -1,4 +1,4 @@
-require("dotenv").config({ path: "./Secrets/.env" });
+require("dotenv").config();
 const express = require("express");
 const ConnectDb = require("./db/connect");
 const cors = require("cors");

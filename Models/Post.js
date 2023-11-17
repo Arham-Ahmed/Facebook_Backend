@@ -18,15 +18,13 @@ const PostScehma = new mongoose.Schema({
   },
   likes: [
     {
-      users: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
   ],
   comments: [
     {
-      users: {
+      user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
