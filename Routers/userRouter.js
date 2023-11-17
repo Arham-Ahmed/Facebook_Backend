@@ -9,8 +9,8 @@ const {
   loginUser,
 } = require("../Controllers/userController");
 const { isauthenticated, hasRole } = require("../Middlewares/auth");
-const { upload } = require("../utils/upload");
-const { multi } = require("../utils/multiupload");
+const { upload } = require("../Middlewares/multermiddleware/upload");
+const { multi } = require("../Middlewares/multermiddleware/multiupload");
 const userRouter = express.Router();
 
 userRouter

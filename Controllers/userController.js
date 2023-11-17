@@ -7,7 +7,7 @@ const Token = require("../Models/Token");
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
   httpOnly: true,
-  sameSite: "none",
+  sameSite: "lax",
   secure: true,
   Expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
   // path: "http://localhost:5000/users/user",
@@ -19,7 +19,7 @@ const createUser = async (req, res) => {
       name: req?.body?.name,
       email: req?.body?.email,
       password: req?.body?.password,
-      profile_photo: req?.files?.profile_photo[0]?.filename,
+      profile_photo: `http://localhost:5000/${req?.files?.profile_photo[0]?.filename}`,
     };
     const ExistsUser = await Users?.findOne({ email: user?.email });
     if (ExistsUser)
@@ -61,7 +61,9 @@ const loginUser = async (req, res) => {
         message: "Invalid Password",
       });
     }
-    const token = jwt?.sign({ _id: user._id }, process?.env?.JWTSCERET);
+    const token = jwt?.sign({ _id: user._id }, process?.env?.JWTSCERET, {
+      expiresIn: "90d",
+    });
     if (!token)
       return res.status(500).json({ message: "Something Went Wrong" });
 
@@ -74,11 +76,19 @@ const loginUser = async (req, res) => {
     user.token.push(newToken._id);
     await user.save();
 
-    res.status(200)?.cookie("token", token, Option)?.json({
-      sucess: true,
-      message: "Loggin SucessFully",
-      token,
-    });
+    res
+      .status(200)
+      ?.cookie("token", token, Option)
+      ?.json({
+        sucess: true,
+        message: "Loggin SucessFully",
+        user: await User.findById({ _id: user.id }).select([
+          "-password",
+          "-role",
+          "-token",
+        ]),
+        token,
+      });
     await user?.save();
   } catch (e) {
     return res?.status(500)?.json({
@@ -145,8 +155,6 @@ const removeUser = async (req, res) => {
 // For Updating Users
 const updateUser = async (req, res) => {
   try {
-    console.log(req.files);
-
     const { email, name } = req?.body;
     const UpdatedUser = await Users?.findOneAndUpdate(
       { _id: req?.user?._id },
@@ -157,7 +165,9 @@ const updateUser = async (req, res) => {
       return res
         .status(500)
         .json({ sucess: false, message: "Some Error Occured" });
-    UpdatedUser.profile_photo.push(req?.files?.profile_photo[0]?.filename);
+    UpdatedUser.profile_photo.push(
+      `http://localhost:5000/${req?.files?.profile_photo[0]?.filename}`
+    );
     await UpdatedUser?.save();
     res
       .status(200)
@@ -196,14 +206,9 @@ const getallUsers = async (req, res) => {
 };
 const userCall = async (req, res) => {
   const user_id = req?.user?._id;
-  const user = await User?.findById({ _id: user_id }).select([
-    "-todos",
-    "-token",
-    "-role",
-    "-posts",
-    "-followers",
-    "-following",
-  ]);
+  const user = await User?.findById({ _id: user_id })
+    .select(["-token", "-role", "-password"])
+    .populate(["todos", "posts"]);
   try {
     return res.status(200).json({
       success: true,

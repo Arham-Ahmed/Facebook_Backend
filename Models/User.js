@@ -24,6 +24,10 @@ const UserSchema = new mongoose.Schema({
       default:
         "https://cfd.nu.edu.pk/wp-content/uploads/2020/05/5906-e1646889042179-290x333.jpg",
     },
+    // {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Profileimages",
+    // },
   ],
   phoneNumber: {
     type: String,

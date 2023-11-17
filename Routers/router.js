@@ -6,10 +6,12 @@ const {
   updateTodo,
   searchTodo,
 } = require("../Controllers/controller");
-const multer = require("multer");
 const { isauthenticated } = require("../Middlewares/auth");
+const { multi } = require("../Middlewares/multermiddleware/multiupload");
+
 const router = express.Router();
 
+router.use(multi);
 router
   .get("/", isauthenticated, getallTodo)
   .get("/search", isauthenticated, searchTodo)
