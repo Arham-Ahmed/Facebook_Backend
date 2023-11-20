@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
 const Joi = require("joi");
+const moment = require("moment");
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -23,6 +24,17 @@ const UserSchema = new mongoose.Schema({
       type: String,
       default:
         "https://cfd.nu.edu.pk/wp-content/uploads/2020/05/5906-e1646889042179-290x333.jpg",
+    },
+    // {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Profileimages",
+    // },
+  ],
+  cover_photo: [
+    {
+      type: String,
+      default:
+        "https://images.unsplash.com/photo-1504805572947-34fad45aed93?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmFjZWJvb2slMjBjb3ZlcnxlbnwwfHwwfHx8MA%3D%3D",
     },
     // {
     //   type: mongoose.Schema.Types.ObjectId,
@@ -67,6 +79,14 @@ const UserSchema = new mongoose.Schema({
       ref: "Token",
     },
   ],
+  // CreatedAt: {
+  //   type: String,
+  //   default: moment().format("MMMM Do YYYY, h:mm:ss a"),
+  // },
+  isDelete: {
+    type: Date,
+    default: null,
+  },
 });
 UserSchema.pre("save", async function (next) {
   if (this.isModified("password")) {

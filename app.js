@@ -32,8 +32,6 @@ app.use(
   })
 );
 
-// app.use(multer().none());
-
 app.use(cookieParser());
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minutes
@@ -44,7 +42,30 @@ const limiter = rateLimit({
 
 // app.use(limiter);
 
+// Socket Connection
+
+// const io = require("socket.io")(5001, () => {
+//   cors: {
+//     origin: [
+//       "http://localhost:3000",
+//       "http://192.168.0.228:3000",
+//       "http://192.168.0.130:3000",
+//       "http://192.168.0.71:3000",
+//       "*",
+//     ];
+//   }
+// });
+
+// io.on("connection", (socket) => {
+//   console.log("user Connected")
+//   socket.on("userAdd", (userId) => {
+//     socket.userId = userId;
+//   });
+//   io.emit("getUser", socket.userId);
+// });
+
 // Api Call
+
 app.get("/", (req, res) => {
   res.send("Welcome to Todo app using Node js");
 });

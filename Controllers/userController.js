@@ -2,6 +2,8 @@ const Users = require("../Models/User");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Token = require("../Models/Token");
+const { response } = require("../utils/response");
+const moment = require("moment");
 
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
@@ -11,7 +13,7 @@ const Option = {
   Expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
   // path: "http://localhost:5000/users/user",
 };
-// For Creating Users
+///////////////////////////////////////////// For Creating Users /////////////////////////////////////
 const createUser = async (req, res) => {
   try {
     const user = {
@@ -21,50 +23,36 @@ const createUser = async (req, res) => {
       profile_photo: `http://localhost:5000/${req?.files?.profile_photo[0]?.filename}`,
     };
     const ExistsUser = await Users?.findOne({ email: user?.email });
-    if (ExistsUser)
-      return res.status(400).json({
-        sucess: false,
-        message: "User Already Exists",
-      });
+    if (ExistsUser) return response(400, false, "User Already exist", res);
     const newUser = new Users(user);
     await newUser?.save();
     if (!newUser)
-      return res
-        .status(500)
-        .json({ message: "Some Error Occur on Creating Account" });
+      return response(500, false, "Some error occur on creating account", res);
 
-    res.status(201).json({
-      resStatus: res.status,
-      message: "User Created SucessFully ",
-    });
+    return response(201, true, "User created sucessfully", res);
   } catch (e) {
-    return res.status(500).json({ error: e.message });
+    return response(500, false, e.message, res);
   }
 };
-// For Loggin Users
+///////////////////////////////////////////// For Loggin Users /////////////////////////////////////
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
 
     const user = await Users?.findOne({ email: email })?.select("+password");
-    if (!user) {
-      return res.status(401).json({
-        sucess: false,
-        message: "User Dosent Exists",
-      });
-    }
+
+    if (!user) return response(401, false, "User doesn't exist", res);
+
+    if (!user?.isDelete) return response(400, false, "Can't Find User", res);
+
     const isMatch = await bcryptjs?.compare(password, user?.password);
-    if (!isMatch) {
-      return res.status(401).json({
-        sucess: false,
-        message: "Invalid Password",
-      });
-    }
-    const token = jwt?.sign({ _id: user._id }, process?.env?.JWTSCERET, {
+
+    if (!isMatch) return response(401, false, "Invalid Credential", res);
+
+    const token = jwt?.sign({ _id: user?._id }, process?.env?.JWTSCERET, {
       expiresIn: "90d",
     });
-    if (!token)
-      return res.status(500).json({ message: "Something Went Wrong" });
+    if (!token) return response(500, false, "Somthing went wrong", res);
 
     const newToken = new Token({
       token: token,
@@ -72,8 +60,8 @@ const loginUser = async (req, res) => {
       user_id: user?._id,
     });
     await newToken?.save();
-    user.token.push(newToken?._id);
-    await user.save();
+    user.token?.push(newToken?._id);
+    await user?.save();
 
     res
       .status(200)
@@ -81,28 +69,21 @@ const loginUser = async (req, res) => {
       ?.json({
         sucess: true,
         message: "Loggin SucessFully",
-        user: await Users.findById({ _id: user?.id }).select([
+        user: await Users?.findById({ _id: user?.id })?.select([
           "-password",
           "-role",
           "-token",
         ]),
         token,
       });
-    await user?.save();
   } catch (e) {
-    return res?.status(500)?.json({
-      error: e.message,
-    });
+    return response(500, false, e.message);
   }
 };
 const LogoutUser = async (req, res) => {
   try {
     const { token } = req?.cookies;
-    if (!token)
-      return res
-        .status(401)
-        .json({ sucess: false, message: "Unable To Logout Login First" });
-
+    if (!token) return response(401, false, "Unable To Logout Login First");
     const user = await Users?.findById({ _id: req.user?._id });
     if (!user)
       return res.status(401).json({ sucess: false, message: "UnAuthorized" });
@@ -119,7 +100,8 @@ const LogoutUser = async (req, res) => {
     });
   }
 };
-// For Removing Users
+///////////////////////////////////////////// For Removing Users /////////////////////////////////////
+
 const removeUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
@@ -138,7 +120,10 @@ const removeUser = async (req, res) => {
       });
     }
 
-    const deleteUser = await Users?.findOneAndDelete({ email: email });
+    const deleteUser = await Users?.findByIdAndUpdate(
+      { _id: req?.user?._id },
+      { isDelete: moment().format("MMMM Do YYYY, h:mm:ss a") }
+    );
     if (deleteUser) {
       res.status(200)?.clearCookie("token")?.json({
         sucess: true,
@@ -177,7 +162,8 @@ const updateUser = async (req, res) => {
     });
   }
 };
-// For Getting All Users
+///////////////////////////////////////////// For Getting All Users /////////////////////////////////////
+
 const getallUsers = async (req, res) => {
   let AllUsers;
   const { email, name } = req?.query;

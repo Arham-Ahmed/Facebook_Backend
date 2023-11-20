@@ -1,12 +1,13 @@
 const Todos = require("../Models/Todo");
 const User = require("../Models/User");
+
 const addTodo = async (req, res) => {
   try {
     const todo = req?.body;
     const newTodo = new Todos(todo);
-    const user = await User?.findOne(req.user._id);
+    const user = await User?.findOne(req?.user?._id);
     user?.todos?.push(newTodo);
-    newTodo.owner = user._id;
+    newTodo.owner = user?._id;
     await newTodo?.save();
     await user?.save();
     res.status(201)?.json({
@@ -14,7 +15,7 @@ const addTodo = async (req, res) => {
       message: "Data Submitied",
     });
   } catch (e) {
-    res.status(500).send({ error: e.message });
+    res.status(500).send({ error: e?.message });
   }
 };
 const removeTodo = async (req, res) => {
@@ -31,7 +32,7 @@ const removeTodo = async (req, res) => {
     });
   } catch (e) {
     res.status(500).json({
-      message: e.message,
+      message: e?.message,
     });
   }
 };

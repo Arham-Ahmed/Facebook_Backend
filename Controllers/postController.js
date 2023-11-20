@@ -1,3 +1,4 @@
+const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
 
@@ -58,12 +59,19 @@ const removePost = async (req, res) => {
   const { id } = req?.params;
   try {
     const post = await Post?.findByIdAndDelete({ _id: id });
+
     if (!post)
       return res.status(404).json({ sucess: false, message: "Post are Empty" });
     res.status(200).json({
       sucess: true,
       message: "Post Deleted Sucessfully",
     });
+    post.comments;
+    if (post?.comments?.length > 0) {
+      for (let index = 0; index < post?.comments?.length; index++) {
+        Comment?.findByIdAndDelete({ _id });
+      }
+    }
     const user = await User?.findById({ _id: req.user.id });
     const indexofPost = user?.posts?.indexOf(post._id);
     user?.posts?.splice(indexofPost, 1);

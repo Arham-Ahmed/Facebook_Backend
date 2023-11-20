@@ -112,5 +112,25 @@ const DeleteComment = async (req, res) => {
     });
   }
 };
+// const Authreply = async (req, res) => {
+//   try {
+//     const replyComment = req?.params?.id;
+//     const userwhoReply = req.user?._id;
+
+//     if (!replyComment || !userwhoReply)
+//       return res.status(400).json({
+//         sucuess: false,
+//         message: "Error on reply to comment",
+//       });
+
+//     console.log(replyComment, userwhoReply);
+
+//     res.status(200).json({
+//       sucess: true,
+//       message: "Reply add sucessfully",
+//     });
+//   } catch (error) {}
+// };
+////////////////////////////////// Temparay Stop/////////////////////////////////
 
 module.exports = { Like, CreateComment, DeleteComment };
