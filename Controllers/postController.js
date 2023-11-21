@@ -30,15 +30,23 @@ const createPost = async (req, res) => {
 const getallPost = async (req, res) => {
   const { id, name, email } = req?.body;
   try {
-    const posts = await Post?.find({})?.sort();
+    const posts = await Post?.find({})
+      ?.sort()
+      .populate(["owner", "likes", "comments"]);
     if (id) {
-      const posts = await Post?.find({})?.sort();
+      const posts = await Post?.find({})
+        ?.sort()
+        .populate(["owner", "likes", "comments"]);
     }
     if (name) {
-      const posts = await Post?.find({})?.sort();
+      const posts = await Post?.find({})
+        ?.sort()
+        .populate(["owner", "likes", "comments"]);
     }
     if (email) {
-      const posts = await Post?.find({})?.sort();
+      const posts = await Post?.find({})
+        ?.sort()
+        .populate(["owner", "likes", "comments"]);
     }
     if (posts?.length === 0) return res.json({ message: "No Posts Available" });
     res.status(200).json({
@@ -55,11 +63,9 @@ const getallPost = async (req, res) => {
 };
 const getallUserPost = async (req, res) => {
   try {
-    const posts = await Post?.find({ owner: req.user._id })?.sort();
-    console.log(
-      "🚀 ~ file: postController.js:59 ~ getallUserPost ~ posts:",
-      req.user._id
-    );
+    const posts = await Post?.find({ owner: req.user._id })
+      ?.sort()
+      .populate(["owner", "likes", "comments"]);
     if (posts?.length === 0) return res.json({ message: "No Posts Available" });
     res.status(200).json({
       sucess: true,
