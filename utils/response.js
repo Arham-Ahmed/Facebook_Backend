@@ -3,6 +3,7 @@ const response = async (statusCode, sucessBoolean, Message, res, payload) => {
     return await res?.status(statusCode)?.json({
       sucess: sucessBoolean,
       message: Message,
+      payload,
     });
   } catch (error) {
     console.log(error?.message);
