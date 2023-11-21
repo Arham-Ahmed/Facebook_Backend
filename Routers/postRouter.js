@@ -3,6 +3,7 @@ const {
   createPost,
   getallPost,
   removePost,
+  getallUserPost,
   // updatePost,
   // searchPost,
 } = require("../Controllers/postController");
@@ -19,6 +20,7 @@ postRouter.use(multi);
 postRouter.use(isauthenticated);
 postRouter
   .get("/", getallPost)
+  .get("/user-post", getallUserPost)
   .post("/create-post", createPost)
   .post("/like/:id", Like)
   .post("/comment", CreateComment)

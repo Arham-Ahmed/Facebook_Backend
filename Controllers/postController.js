@@ -53,6 +53,26 @@ const getallPost = async (req, res) => {
     });
   }
 };
+const getallUserPost = async (req, res) => {
+  try {
+    const posts = await Post?.find({ owner: req.user._id })?.sort();
+    console.log(
+      "🚀 ~ file: postController.js:59 ~ getallUserPost ~ posts:",
+      req.user._id
+    );
+    if (posts?.length === 0) return res.json({ message: "No Posts Available" });
+    res.status(200).json({
+      sucess: true,
+      resStatus: res.status,
+      Posts: posts,
+    });
+  } catch (error) {
+    res.status(500).json({
+      sucess: false,
+      message: error.message,
+    });
+  }
+};
 
 // For Removing Posts
 const removePost = async (req, res) => {
@@ -87,6 +107,7 @@ module.exports = {
   createPost,
   getallPost,
   removePost,
+  getallUserPost,
   //   updatePost,
   //   searchPost,
 };

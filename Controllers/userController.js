@@ -25,7 +25,6 @@ const createUser = async (req, res) => {
     };
 
     const existsuser = await Users?.findOne({ email: user?.email });
-
     if (!existsuser) {
       const newUser = new Users(user);
       if (!newUser)
@@ -43,6 +42,7 @@ const createUser = async (req, res) => {
     if (existsuser?.isDelete) {
       const userRplace = await Users?.findOneAndDelete({ email: user?.email });
       const newUser = new Users(user);
+      newUser.joiUserValidator();
       if (!newUser)
         return response(
           500,
@@ -204,11 +204,11 @@ const getallUsers = async (req, res) => {
   }
 };
 const userCall = async (req, res) => {
-  const user_id = req?.user?._id;
-  const user = await Users?.findById({ _id: user_id })
-    .select(["-token", "-role", "-password"])
-    .populate(["todos", "posts"]);
   try {
+    const user_id = req?.user?._id;
+    const user = await Users?.findById({ _id: user_id })
+      .select(["-token", "-role", "-password"])
+      .populate(["todos", "posts"]);
     return res.status(200).json({
       success: true,
       User: user,

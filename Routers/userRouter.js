@@ -11,6 +11,10 @@ const {
 const { isauthenticated, hasRole } = require("../Middlewares/auth");
 const { upload } = require("../Middlewares/multermiddleware/upload");
 const { multi } = require("../Middlewares/multermiddleware/multiupload");
+const {
+  validateMiddleware,
+} = require("../Middlewares/validatorMiddleware/validateMiddleware");
+const { joiUserValidator } = require("../Models/User");
 const userRouter = express.Router();
 
 userRouter
@@ -18,6 +22,7 @@ userRouter
   .get("/user", multi, isauthenticated, userCall)
   .post(
     "/register",
+    [validateMiddleware(joiUserValidator)],
     upload.fields([
       {
         name: "profile_photo",

@@ -90,35 +90,24 @@ UserSchema.pre("save", async function (next) {
   }
   next();
 });
-UserSchema.methods.JoiValidation = () => {
-  let schema = {
-    name: Joi.types
-      .String()
-      .alphanum()
-      .min(6)
-      .max(20)
-      .trim(true)
-      .regex(/^[^\s]+$/)
-      .required(),
-    email: Joi.types
-      .String()
-      .email()
-      .trim(true)
-      .regex(/^[^\s]+$/)
-      .required(),
-    password: Joi.types
-      .String()
-      .trim(true)
-      .min(6)
-      .max(20)
-      .regex(/^[^\s]+$/)
-      .required(),
-    phoneNumber: Joi.string()
-      .length(10)
-      .pattern(/[6-9]{1}[0-9]{9}/)
-      .required(),
-  };
-  return Joi.validate(obj, schema);
-};
+
+// userSchema.methods.joiValidate = function () {
+//   // pull out just the properties that has to be checked (generated fields from mongoose we ignore)
+//   const { username, email, password } = this;
+//   const user = { username, email, password };
+//   const Joi = require("joi");
+//   const schema = Joi.object().keys({
+//     username: Joi.string().min(6).max(24).required(),
+//     email: Joi.string().email().required(),
+//     password: Joi.string()
+//       .min(8)
+//       .max(30)
+//       .regex(/[a-zA-Z0-9]{3,30}/)
+//       .required(),
+//     _id: Joi.string(),
+//   });
+
+//   return Joi.validate(user, schema, { abortEarly: false });
+// };
 
 module.exports = mongoose.model("User", UserSchema);
