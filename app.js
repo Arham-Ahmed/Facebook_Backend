@@ -73,6 +73,7 @@ app.use("/todos", isauthenticated, router);
 app.use("/users", userRouter);
 app.use("/posts", isauthenticated, postRouter);
 app.use(express.static(path.join(__dirname, "public/images")));
+app.use(express.static(path.join(__dirname, "public/Postimages")));
 
 // Server Function
 

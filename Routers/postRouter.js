@@ -14,17 +14,27 @@ const {
   CreateComment,
   DeleteComment,
 } = require("../Controllers/interaction");
+const { Postimages } = require("../Middlewares/multermiddleware/postImgUpload");
 // const { isLogin } = require("../Middlewares/auth");
 const postRouter = express.Router();
-postRouter.use(multi);
+// postRouter.use(multi);
 postRouter.use(isauthenticated);
 postRouter
   .get("/", getallPost)
   .get("/user-post", getallUserPost)
-  .post("/create-post", createPost)
+  .post(
+    "/create-post",
+    Postimages.fields([
+      {
+        name: "imageUrl",
+        maxCount: 5,
+      },
+    ]),
+    createPost
+  )
   .post("/like/:id", Like)
-  .post("/comment", CreateComment)
-  .delete("/delete-post/:id", removePost)
+  .post("/comment", multi, CreateComment)
+  .delete("/delete-post/:id", multi, removePost)
   .delete("/delete-comment/:id", DeleteComment);
 
 // .post("/search/:id", searchPost)

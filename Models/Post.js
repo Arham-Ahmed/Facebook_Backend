@@ -6,17 +6,13 @@ const PostScehma = new mongoose.Schema(
       type: String,
       required: [true, "Plz Add Some Text"],
     },
-    image: {
-      img_url: String,
+    imageUrl: {
+      type: String,
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
-    // createdAt: {
-    //   type: Date,
-    //   default: Date.now(),
-    // },
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,

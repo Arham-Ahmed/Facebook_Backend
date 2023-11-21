@@ -22,7 +22,7 @@ userRouter
   .get("/user", multi, isauthenticated, userCall)
   .post(
     "/register",
-    [validateMiddleware(joiUserValidator)],
+    // [validateMiddleware(joiUserValidator)],
     upload.fields([
       {
         name: "profile_photo",

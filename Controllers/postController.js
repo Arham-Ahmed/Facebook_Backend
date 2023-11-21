@@ -7,11 +7,10 @@ const createPost = async (req, res) => {
   try {
     const newPost = {
       caption: req?.body?.caption,
-      image: {
-        img_url: req?.body?.img_url,
-      },
+      imageUrl: `http://localhost:5000/${req?.files?.imageUrl[0]?.filename}`,
       owner: req?.user?._id,
     };
+    console.log(req.files);
     const post = new Post(newPost);
     if (!post) return res.status(500).json({ message: "Some Error Occur" });
     await post?.save();
@@ -80,7 +79,7 @@ const getallUserPost = async (req, res) => {
   }
 };
 
-// For Removing Posts
+////////////////////////////////////// For Removing Posts ///////////////////////////////
 const removePost = async (req, res) => {
   const { id } = req?.params;
   try {
