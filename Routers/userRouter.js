@@ -14,7 +14,6 @@ const { multi } = require("../Middlewares/multermiddleware/multiupload");
 const {
   validateMiddleware,
 } = require("../Middlewares/validatorMiddleware/validateMiddleware");
-const { joiUserValidator } = require("../Models/User");
 const userRouter = express.Router();
 
 userRouter
@@ -22,16 +21,18 @@ userRouter
   .get("/user", multi, isauthenticated, userCall)
   .post(
     "/register",
-    // [validateMiddleware(joiUserValidator)],
-    upload.fields([
-      {
-        name: "profile_photo",
-        maxCount: 5,
-      },
-    ]),
+    [
+      upload.fields([
+        {
+          name: "profile_photo",
+          maxCount: 5,
+        },
+      ]),
+      validateMiddleware,
+    ],
     createUser
   )
-  .post("/login", multi, loginUser)
+  .post("/login", [multi, validateMiddleware], loginUser)
   .get("/logout", multi, isauthenticated, LogoutUser)
   .delete("/delete", multi, isauthenticated, removeUser)
   .put(

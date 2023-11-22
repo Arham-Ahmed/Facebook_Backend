@@ -1,6 +1,6 @@
 require("dotenv").config();
 const express = require("express");
-const ConnectDb = require("./db/connect");
+const connectDb = require("./db/connect");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
@@ -33,12 +33,13 @@ app.use(
 );
 
 app.use(cookieParser());
-const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minutes
-  limit: 400, //Limit
-  headers: true,
-  message: `Your can do 350 request per min`,
-});
+
+// const limiter = rateLimit({
+//   windowMs: 60 * 1000, // 1 minutes
+//   limit: 400, //Limit
+//   headers: true,
+//   message: `Your can do 350 request per min`,
+// });
 
 // app.use(limiter);
 
@@ -91,9 +92,9 @@ const start = async (url) => {
         "\x1b[0m"
       );
     });
-    await ConnectDb(process.env.MONGODB_URI);
+    await connectDb(process.env.MONGODB_URI);
     // console.log("Connected");
-    if (ConnectDb) {
+    if (connectDb) {
       console.log("\x1b[32m", "Connected");
     } else {
       console.log("\x1b[31m", "not Connected");

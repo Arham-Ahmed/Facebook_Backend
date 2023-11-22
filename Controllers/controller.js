@@ -1,11 +1,11 @@
-const Todos = require("../Models/Todo");
-const User = require("../Models/User");
+const todosModel = require("../Models/Todo");
+const userModel = require("../Models/User");
 
 const addTodo = async (req, res) => {
   try {
     const todo = req?.body;
     const newTodo = new Todos(todo);
-    const user = await User?.findOne(req?.user?._id);
+    const user = await userModel?.findOne(req?.user?._id);
     user?.todos?.push(newTodo);
     newTodo.owner = user?._id;
     await newTodo?.save();
@@ -21,8 +21,8 @@ const addTodo = async (req, res) => {
 const removeTodo = async (req, res) => {
   try {
     const todo_iD = req?.params?.id;
-    await Todos?.findOneAndDelete({ _id: todo_iD });
-    const user = await User?.findById(req?.user?._id);
+    await todosModel.findOneAndDelete({ _id: todo_iD });
+    const user = await userModel?.findById(req?.user?._id);
     const todoIndex = user?.todos?.indexOf(todo_iD);
     user?.todos?.splice(todoIndex, 1);
     await user?.save();
@@ -40,7 +40,7 @@ const updateTodo = async (req, res) => {
   try {
     const todo_id = req?.body?.id;
     const { todo, done } = req?.body;
-    const updateTodo = await Todos?.findOneAndUpdate(
+    const updateTodo = await todosModel.findOneAndUpdate(
       { _id: todo_id },
       { todo: todo, done: done }
     );
@@ -58,11 +58,11 @@ const updateTodo = async (req, res) => {
 };
 const getallTodo = async (req, res) => {
   try {
-    const user = await User?.findOne(req?.user?._id)?.populate("todos");
+    const user = await userModel?.findOne(req?.user?._id)?.populate("todos");
     if (!user)
       return res
         ?.status(404)
-        ?.json({ sucess: false, message: "User Not Found" });
+        ?.json({ sucess: false, message: "userModel Not Found" });
     TodosData = user?.todos;
     res.status(200).json({
       success: true,
@@ -79,7 +79,7 @@ const searchTodo = async (req, res) => {
     const todo = req?.body?.todo;
     res.status(200).json({
       resStatus: res?.status,
-      Todos: await Todos?.find({ todo: todo }),
+      Todos: await todosModel.find({ todo: todo }),
     });
   } catch (error) {
     res.status(500).json({

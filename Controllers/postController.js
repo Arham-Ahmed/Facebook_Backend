@@ -1,6 +1,7 @@
 const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
+const { response } = require("../utils/response");
 
 // For Creating Post
 const createPost = async (req, res) => {
@@ -10,7 +11,6 @@ const createPost = async (req, res) => {
       imageUrl: `http://localhost:5000/${req?.files?.imageUrl[0]?.filename}`,
       owner: req?.user?._id,
     };
-    console.log(req.files);
     const post = new Post(newPost);
     if (!post) return res.status(500).json({ message: "Some Error Occur" });
     await post?.save();
@@ -81,12 +81,16 @@ const getallUserPost = async (req, res) => {
 
 ////////////////////////////////////// For Removing Posts ///////////////////////////////
 const removePost = async (req, res) => {
-  const { id } = req?.params;
   try {
-    const post = await Post?.findByIdAndDelete({ _id: id });
+    const { id } = req?.params;
+
+    const post = await Post?.findOne({ _id: id });
 
     if (!post)
       return res.status(404).json({ sucess: false, message: "Post are Empty" });
+    if (post.owner !== req?.user?.id) {
+      return response(400, false, "Your are not login with this account", res);
+    }
     res.status(200).json({
       sucess: true,
       message: "Post Deleted Sucessfully",

@@ -22,7 +22,7 @@ const Like = async (req, res) => {
       return res.status(200).json({
         sucuess: true,
         message: "UnLiked",
-        currPost,
+        likerId: req.user?._id,
       });
     } else {
       currPost?.likes?.push(req.user?._id);
@@ -30,7 +30,7 @@ const Like = async (req, res) => {
       return res.status(200).json({
         sucuess: true,
         message: "Liked",
-        currPost,
+        likerId: req.user?._id,
       });
     }
   } catch (error) {
