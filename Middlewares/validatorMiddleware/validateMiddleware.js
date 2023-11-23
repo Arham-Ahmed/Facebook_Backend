@@ -6,7 +6,6 @@ const validateMiddleware = (req, res, next) => {
     const schema = Joi.object().keys({
       id: Joi.string().hex().length(24),
       name: Joi.string()
-        .alphanum()
         .min(3)
         .max(20)
         .trim(true)
