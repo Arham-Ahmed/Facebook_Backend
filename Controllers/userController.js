@@ -22,7 +22,7 @@ const createUser = async (req, res) => {
       name: req?.body?.name,
       email: req?.body?.email,
       password: req?.body?.password,
-      profile_photo: `http://localhost:5000/${req?.files?.profile_photo[0]?.filename}`,
+      profile_photo: `${process.env.BASEURL}/${req?.files?.profile_photo[0]?.filename}`,
     };
 
     const existsuser = await Users?.findOne({ email: user?.email });
