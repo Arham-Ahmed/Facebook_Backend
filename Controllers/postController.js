@@ -8,7 +8,7 @@ const createPost = async (req, res) => {
   try {
     const newPost = {
       caption: req?.body?.caption,
-      imageUrl: `http://localhost:5000/${req?.files?.imageUrl[0]?.filename}`,
+      imageUrl: `${process.env.BASEURL}/${req?.files?.imageUrl?.[0]?.filename}`,
       owner: req?.user?._id,
     };
     const post = new Post(newPost);
