@@ -42,7 +42,6 @@ const createUser = async (req, res) => {
     if (existsuser?.isDelete) {
       const userRplace = await Users?.findOneAndDelete({ email: user?.email });
       const newUser = new Users(user);
-      newUser.joiUserValidator();
       if (!newUser)
         return response(
           500,
@@ -68,7 +67,7 @@ const loginUser = async (req, res) => {
     const user = await Users?.findOne({ email: email })?.select("+password");
 
     if (!user) return response(401, false, "User doesn't exist", res);
-
+    console.log(user?.isDelete);
     if (user?.isDelete !== null)
       return response(400, false, "Can't Find User", res);
 
