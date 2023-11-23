@@ -171,7 +171,7 @@ const updateUser = async (req, res) => {
     if (!UpdatedUser) return response(500, false, "Some Error Occured", res);
 
     UpdatedUser?.profile_photo?.push(
-      `http://localhost:5000/${req?.files?.profile_photo[0]?.filename}`
+      `${process.env.BASEURL}/${req?.files?.profile_photo[0]?.filename}`
     );
     await UpdatedUser?.save();
 
