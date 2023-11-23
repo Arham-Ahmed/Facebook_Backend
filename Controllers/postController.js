@@ -94,6 +94,7 @@ const removePost = async (req, res) => {
     if (post.owner.toHexString() !== req?.user?.id) {
       return response(400, false, "Your are not login with this account", res);
     }
+    const Deletepost = await Post?.findByIdAndDelete({ _id: id });
     res.status(200).json({
       sucess: true,
       message: "Post Deleted Sucessfully",
