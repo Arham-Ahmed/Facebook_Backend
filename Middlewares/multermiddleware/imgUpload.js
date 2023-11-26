@@ -25,9 +25,12 @@ const filefilter = (req, file, cb) => {
     cb(new Error("Unsupported File Format"));
   }
 };
+
 const imgUpload = multer({
   storage: storage,
   fileFilter: filefilter,
 });
+
+// const imgUpload = multer({ storage: multer.memoryStorage() });
 
 module.exports = { imgUpload };

@@ -1,10 +1,12 @@
 const Users = require("../Models/User");
 const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const Token = require("../Models/Token");
+const tokenModel = require("../Models/Token");
 const { response } = require("../utils/response");
 const moment = require("moment");
 
+const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
+// Initialize Firebase
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
   httpOnly: true,
@@ -21,9 +23,8 @@ const createUser = async (req, res) => {
       name: req?.body?.name,
       email: req?.body?.email,
       password: req?.body?.password,
-      profile_photo: `http://localhost:5000/${req?.files?.profile_photo[0]?.filename}`,
+      // profile_photo: `http://localhost:5000/${req?.files?.profile_photo[0]?.filename}`,
     };
-
     const existsuser = await Users?.findOne({ email: user?.email });
     if (!existsuser) {
       const newUser = new Users(user);
@@ -34,9 +35,12 @@ const createUser = async (req, res) => {
           "Some error occur on creating account",
           res
         );
+      // firebase Image Uploading ...
+      const downloadUrl = await firebaseUploder("profile_photo", req);
+      // firebase Image Uploading end...
+      newUser.profile_photo.push(downloadUrl);
       await newUser?.save();
-
-      return response(201, true, "User created sucessfully", res, user);
+      return response(201, true, "User created sucessfully", newUser, res);
     }
 
     if (existsuser?.isDelete) {
@@ -49,9 +53,13 @@ const createUser = async (req, res) => {
           "Some error occur on creating account",
           res
         );
+      // firebase Image Uploading ...
+      const downloadUrl = await firebaseUploder("profile_photo", req);
+      // firebase Image Uploading end...
+      newUser.profile_photo.push(downloadUrl);
       await newUser?.save();
 
-      response(200, true, "User created sucessfully", res, userRplace);
+      return response(201, true, "User created sucessfully", res);
     }
     if (!existsuser?.isDelete)
       return response(400, false, "User Already exist", res);
@@ -67,7 +75,6 @@ const loginUser = async (req, res) => {
     const user = await Users?.findOne({ email: email })?.select("+password");
 
     if (!user) return response(401, false, "User doesn't exist", res);
-    console.log(user?.isDelete);
     if (user?.isDelete !== null)
       return response(400, false, "Can't Find User", res);
 
@@ -79,7 +86,7 @@ const loginUser = async (req, res) => {
     });
     if (!token) return response(500, false, "Somthing went wrong", res);
 
-    const newToken = new Token({
+    const newToken = new tokenModel({
       token: token,
       Device: req?.headers["user-agent"],
       user_id: user?._id,

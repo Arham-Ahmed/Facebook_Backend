@@ -26,12 +26,13 @@ userRouter
     "/register",
     [
       // imageCompresser,
-      upload.fields([
-        {
-          name: "profile_photo",
-          maxCount: 5,
-        },
-      ]),
+      // upload.fields([
+      //   {
+      //     name: "profile_photo",
+      //     maxCount: 5,
+      //   },
+      // ]),
+      upload.single("profile_photo"),
       validateMiddleware,
     ],
     createUser

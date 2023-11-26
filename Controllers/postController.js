@@ -89,8 +89,6 @@ const removePost = async (req, res) => {
     if (!post)
       return res.status(404).json({ sucess: false, message: "Post are Empty" });
 
-    console.log(post.owner.toHexString() !== req?.user?.id);
-
     if (post.owner.toHexString() !== req?.user?.id) {
       return response(400, false, "Your are not login with this account", res);
     }
