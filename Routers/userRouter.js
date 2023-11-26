@@ -25,7 +25,6 @@ userRouter
   .post(
     "/register",
     [
-      // imageCompresser,
       // upload.fields([
       //   {
       //     name: "profile_photo",
@@ -33,6 +32,8 @@ userRouter
       //   },
       // ]),
       upload.single("profile_photo"),
+      imageCompresser,
+
       validateMiddleware,
     ],
     createUser

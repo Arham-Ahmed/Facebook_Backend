@@ -12,7 +12,6 @@ const { userRouter } = require("./Routers/userRouter");
 const { isauthenticated } = require("./Middlewares/auth");
 const { postRouter } = require("./Routers/postRouter");
 const { rateLimit } = require("express-rate-limit");
-
 // middelware
 
 const app = express();
@@ -34,7 +33,6 @@ app.use(
 );
 
 app.use(cookieParser());
-
 // const limiter = rateLimit({
 //   windowMs: 60 * 1000, // 1 minutes
 //   limit: 400, //Limit

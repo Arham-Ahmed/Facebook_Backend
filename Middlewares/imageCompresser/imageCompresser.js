@@ -1,26 +1,36 @@
-const compressImages = require("compress-images");
+const sharp = require("sharp");
 const { response } = require("../../utils/response");
 const imageCompresser = async (req, res, next) => {
   try {
-    compressImages(
-      "public/images/**/*.{jpg,JPG,jpeg,JPEG,png,svg,gif}",
-      "public/images",
-      {
-        compress_force: false,
-        statistic: true,
-        autoupdate: true,
-      },
-      false,
-      { jpg: { engine: mozjpg, command: ["-quality", 60] } },
-      { png: { engine: pngquant, command: ["--quality=20-50", "-o"] } },
-      { svg: { engine: svgo, command: ["--multipass"] } },
-      { gif: { engine: gifsicle, command: ["--color", 64, "--use-col=web"] } },
-      function (err, complete) {
-        if (err) return response(500, false, err, res);
-        if (complete) console.log("done");
-      }
-    );
+    console.log(req.file);
+    // const image = sharp("public/images");
+    const jpeg = await sharp(req?.file?.buffer)
+      .resize(300, 300)
+      .png()
+      .tiff({
+        compression: "lzw",
+        bitdepth: 8,
+      })
+      .toFile(
+        `public/images/${new Date(
+          Date.now()
+        ).getTime()}${req.file.originalname.replace(
+          /\W|jpeg|jpg|png/g,
+          ""
+        )}.png`
+      );
+    // if (jpeg.size > 1800) {
+    //   const img = sharp(req?.file.buffer);
+    //   console.log(img.toBuffer());
+    //   // return img.toBuffer();
+    // } else {
+    //   // return img.toBuffer();
+    //   const img = sharp(req?.file.buffer);
+    //   console.log(await img.toBuffer());
+    // }
+    return response(200, true, "imageUploaded", res);
   } catch (error) {
+    console.log(error);
     return response(500, false, error, res);
   }
   next();
