@@ -4,7 +4,7 @@ const userModel = require("../Models/User");
 const addTodo = async (req, res) => {
   try {
     const todo = req?.body;
-    const newTodo = new Todos(todo);
+    const newTodo = new todosModel(todo);
     const user = await userModel?.findOne(req?.user?._id);
     user?.todos?.push(newTodo);
     newTodo.owner = user?._id;

@@ -7,6 +7,11 @@ const JWTSCERET = process.env.JWTSCERET;
 
 const isauthenticated = async (req, res, next) => {
   try {
+    console.log("auth");
+    console.log(
+      "🚀 ~ file: auth.js:11 ~ isauthenticated ~ req?.cookies:",
+      req?.cookies
+    );
     const { token } = req?.cookies;
     if (!token) {
       return response(

@@ -10,7 +10,8 @@ const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
   httpOnly: true,
-  sameSite: "lax",
+  // sameSite: "lax",
+  sameSite: "none",
   secure: true,
   Expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
   // path: "http://localhost:5000/users/user",
@@ -177,7 +178,7 @@ const updateUser = async (req, res) => {
     if (!UpdatedUser) return response(500, false, "Some Error Occured", res);
 
     UpdatedUser?.profile_photo?.push(
-      `http://localhost:5000/${req?.files?.profile_photo[0]?.filename}`
+      `${process.env.BASEURL}/${req?.files?.profile_photo[0]?.filename}`
     );
     await UpdatedUser?.save();
 

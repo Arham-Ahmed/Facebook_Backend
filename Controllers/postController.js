@@ -8,7 +8,7 @@ const createPost = async (req, res) => {
   try {
     const newPost = {
       caption: req?.body?.caption,
-      imageUrl: `http://localhost:5000/${req?.files?.imageUrl[0]?.filename}`,
+      imageUrl: `${process.env.BASEURL}/${req?.files?.imageUrl?.[0]?.filename}`,
       owner: req?.user?._id,
     };
     const post = new Post(newPost);
@@ -92,6 +92,7 @@ const removePost = async (req, res) => {
     if (post.owner.toHexString() !== req?.user?.id) {
       return response(400, false, "Your are not login with this account", res);
     }
+    const Deletepost = await Post?.findByIdAndDelete({ _id: id });
     res.status(200).json({
       sucess: true,
       message: "Post Deleted Sucessfully",
