@@ -93,7 +93,7 @@ const start = async (url) => {
         "\x1b[0m"
       );
     });
-    await connectDb();
+    await connectDb(process.env.MONGODB_URI);
     // console.log("Connected");
     if (connectDb) {
       console.log("\x1b[32m", "Connected");
