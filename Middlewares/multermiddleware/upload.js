@@ -7,10 +7,9 @@ const {
 } = require("firebase/storage");
 const firebase = require("firebase/app");
 const { firebaseConfig } = require("../../firebase");
+const sharp = require("sharp");
 
 firebase.initializeApp(firebaseConfig);
-
-// const fs = require("fs");
 
 // const fileDestination = (req, file, cb /*callback*/) => {
 //   if (!fs?.existsSync("public")) {
@@ -47,16 +46,17 @@ const storage = getStorage();
 const upload = multer({ storage: multer.memoryStorage() });
 
 const firebaseUploder = async (folder, image) => {
+  const sharpimg = await sharp(image).toBuffer();
   const storageRef = ref(
     storage,
-    `${folder}/${req?.file?.originalname + " " + " " + new Date()?.getTime()}`
+    `${folder}/${+" " + " " + "abc" + new Date()?.getTime()}`
   );
   const metadata = {
-    contentType: req?.file?.mimetype,
+    contentType: "webp",
   };
   const uploadedFile = await uploadBytesResumable(
     storageRef,
-    image,
+    sharpimg,
     metadata
   );
 
