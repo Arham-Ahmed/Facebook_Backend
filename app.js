@@ -11,7 +11,7 @@ const { router } = require("./Routers/router");
 const { userRouter } = require("./Routers/userRouter");
 const { isauthenticated } = require("./Middlewares/auth");
 const { postRouter } = require("./Routers/postRouter");
-const { rateLimit } = require("express-rate-limit");
+// const { rateLimit } = require("express-rate-limit");
 // middelware
 
 const app = express();

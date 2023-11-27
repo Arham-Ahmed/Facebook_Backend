@@ -6,9 +6,7 @@ const { response } = require("../utils/response");
 const moment = require("moment");
 
 const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
-const {
-  imageCompresser,
-} = require("../Middlewares/imageCompresser/imageCompresser");
+const { imageCompresser } = require("../utils/imageCompresser/imageCompresser");
 // Initialize Firebase
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
@@ -40,15 +38,25 @@ const createUser = async (req, res) => {
           "Some error occur on creating account"
         );
       // firebase Image Uploading ...
-      const downloadUrl = await firebaseUploder(
-        "profile_photo/",
-        await imageCompresser(req),
-        req
-      );
+      // const downloadUrl = await firebaseUploder(
+      //   "profile_photo/",
+      //   await imageCompresser(req)
+      // );
+      if (req?.files?.profile_photo?.length === 1) {
+        req?.files?.profile_photo.forEach(async (e) => {
+          const downloadUrl = await firebaseUploder(
+            "profile_photo",
+            await imageCompresser(e),
+            req
+          );
+          newUser.profile_photo.push(downloadUrl);
+          await newUser.save();
+        });
+      }
 
       // firebase Image Uploading end...
-      newUser.profile_photo.push(downloadUrl);
-      await newUser?.save();
+
+      // await newUser?.save();
       return response(res, 201, true, "User created sucessfully", newUser);
     }
 
@@ -63,16 +71,28 @@ const createUser = async (req, res) => {
           "Some error occur on creating account"
         );
 
-      // firebase Image Uploading ...
-      const downloadUrl = await firebaseUploder(
-        "profile_photo",
-        await imageCompresser(req),
-        req
-      );
+      // // firebase Image Uploading ...
+      // const downloadUrl = await firebaseUploder(
+      //   "profile_photo",
+      //   await imageCompresser(req),
+      //   req
+      // );
 
-      // firebase Image Uploading end...
-      newUser.profile_photo.push(downloadUrl);
-      await newUser?.save();
+      // // firebase Image Uploading end...
+      // newUser.profile_photo.push(downloadUrl);
+      // await newUser?.save();
+      console.log(req?.files?.profile_photo?.length);
+      if (req?.files?.profile_photo?.length === 1) {
+        req?.files?.profile_photo.forEach(async (e) => {
+          const downloadUrl = await firebaseUploder(
+            "profile_photo",
+            await imageCompresser(e),
+            req
+          );
+          newUser.profile_photo.push(downloadUrl);
+          await newUser.save();
+        });
+      }
 
       return response(res, 201, true, "User created sucessfully", newUser);
     }
@@ -191,12 +211,19 @@ const updateUser = async (req, res) => {
 
     if (!UpdatedUser) return response(res, 500, false, "Some Error Occured");
 
-    UpdatedUser?.profile_photo?.push(
-      `${process.env.BASEURL}/${req?.files?.profile_photo[0]?.filename}`
-    );
-    await UpdatedUser?.save();
+    if (req?.files?.profile_photo?.length === 1) {
+      const downloadUrl = await firebaseUploder(
+        "profile_photo",
+        await imageCompresser(req?.files?.profile_photo[0])
+        // req
+      );
+      UpdatedUser?.profile_photo?.push(downloadUrl);
+      await UpdatedUser?.save();
+    }
 
-    return response(res, 200, true, "Updated sucessfully");
+    // await UpdatedUser?.save();
+
+    return response(res, 200, true, "Updated sucessfully", UpdatedUser);
   } catch (e) {
     return response(res, 500, false, e?.message);
   }

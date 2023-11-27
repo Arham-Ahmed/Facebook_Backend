@@ -22,7 +22,16 @@ postRouter.use(isauthenticated);
 postRouter
   .get("/", getallPost)
   .get("/user-post", getallUserPost)
-  .post("/create-post", upload.single("imageUrl"), createPost)
+  .post(
+    "/create-post",
+    upload.fields([
+      {
+        name: "imageUrl",
+        maxCount: 5,
+      },
+    ]),
+    createPost
+  )
   .post("/like/:id", Like)
   .post("/comment", multi, CreateComment)
   .delete("/delete-post/:id", multi, removePost)

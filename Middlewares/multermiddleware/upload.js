@@ -8,7 +8,6 @@ const {
 } = require("firebase/storage");
 const firebase = require("firebase/app");
 const { firebaseConfig } = require("../../firebase");
-const sharp = require("sharp");
 
 firebase.initializeApp(firebaseConfig);
 

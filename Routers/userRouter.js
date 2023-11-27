@@ -14,9 +14,7 @@ const { multi } = require("../Middlewares/multermiddleware/multiupload");
 const {
   validateMiddleware,
 } = require("../Middlewares/validatorMiddleware/validateMiddleware");
-const {
-  imageCompresser,
-} = require("../Middlewares/imageCompresser/imageCompresser");
+
 const userRouter = express.Router();
 
 userRouter
@@ -25,13 +23,13 @@ userRouter
   .post(
     "/register",
     [
-      // upload.fields([
-      //   {
-      //     name: "profile_photo",
-      //     maxCount: 5,
-      //   },
-      // ]),
-      upload.single("profile_photo"),
+      upload.fields([
+        {
+          name: "profile_photo",
+          maxCount: 1,
+        },
+      ]),
+      // upload.single("profile_photo"),
       // imageCompresser,
       validateMiddleware,
     ],
@@ -42,13 +40,13 @@ userRouter
   .delete("/delete", multi, isauthenticated, removeUser)
   .put(
     "/update-user",
+    isauthenticated,
     upload.fields([
       {
         name: "profile_photo",
-        maxCount: 5,
+        maxCount: 1,
       },
     ]),
-    isauthenticated,
     updateUser
   );
 

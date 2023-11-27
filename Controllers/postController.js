@@ -3,9 +3,7 @@ const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
 const { response } = require("../utils/response");
-const {
-  imageCompresser,
-} = require("../Middlewares/imageCompresser/imageCompresser");
+const { imageCompresser } = require("../utils/imageCompresser/imageCompresser");
 
 // For Creating Post
 const createPost = async (req, res) => {
@@ -16,17 +14,28 @@ const createPost = async (req, res) => {
     };
     const post = new Post(newPost);
     if (!post) return res.status(500).json({ message: "Some Error Occur" });
-    // await post?.save();
     const user = await User?.findById(req?.user?._id);
     user?.posts?.push(post?._id);
     await user?.save();
-    const postdownloadUrl = await firebaseUploder(
-      "/post_images",
-      await imageCompresser(req),
-      req
-    );
-    post.imageUrl.push(await postdownloadUrl);
-    await post.save();
+    if (req?.files?.imageUrl?.length > 1) {
+      req?.files?.imageUrl.forEach(async (e) => {
+        const postdownloadUrl = await firebaseUploder(
+          "/post_images",
+          await imageCompresser(e),
+          req
+        );
+        post.imageUrl.push(await postdownloadUrl);
+      });
+    } else {
+      const postdownloadUrl = await firebaseUploder(
+        "/post_images",
+        await imageCompresser(req?.files?.imageUrl[0])
+      );
+      post.imageUrl.push(await postdownloadUrl);
+      await post.save();
+    }
+    await post?.save();
+
     return res.status(201).json({
       resStatus: res.status,
       message: "Post Created SucessFully ",
