@@ -32,8 +32,7 @@ userRouter
       //   },
       // ]),
       upload.single("profile_photo"),
-      imageCompresser,
-
+      // imageCompresser,
       validateMiddleware,
     ],
     createUser

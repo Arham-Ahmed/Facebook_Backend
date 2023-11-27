@@ -6,6 +6,9 @@ const { response } = require("../utils/response");
 const moment = require("moment");
 
 const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
+const {
+  imageCompresser,
+} = require("../Middlewares/imageCompresser/imageCompresser");
 // Initialize Firebase
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
@@ -36,8 +39,12 @@ const createUser = async (req, res) => {
           "Some error occur on creating account",
           res
         );
+
       // firebase Image Uploading ...
-      const downloadUrl = await firebaseUploder("profile_photo", req);
+      const downloadUrl = await firebaseUploder(
+        "profile_photo",
+        imageCompresser(req)
+      );
       // firebase Image Uploading end...
       newUser.profile_photo.push(downloadUrl);
       await newUser?.save();
@@ -54,8 +61,17 @@ const createUser = async (req, res) => {
           "Some error occur on creating account",
           res
         );
+
       // firebase Image Uploading ...
-      const downloadUrl = await firebaseUploder("profile_photo", req);
+      const downloadUrl = await firebaseUploder(
+        "profile_photo",
+        await imageCompresser(req)
+      );
+      console.log(
+        "🚀 ~ file: userController.js:68 ~ createUser ~ downloadUrl:",
+        downloadUrl
+      );
+
       // firebase Image Uploading end...
       newUser.profile_photo.push(downloadUrl);
       await newUser?.save();

@@ -46,7 +46,7 @@ const storage = getStorage();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-const firebaseUploder = async (folder, req) => {
+const firebaseUploder = async (folder, image) => {
   const storageRef = ref(
     storage,
     `${folder}/${req?.file?.originalname + " " + " " + new Date()?.getTime()}`
@@ -56,7 +56,7 @@ const firebaseUploder = async (folder, req) => {
   };
   const uploadedFile = await uploadBytesResumable(
     storageRef,
-    req?.file?.buffer,
+    image,
     metadata
   );
 
