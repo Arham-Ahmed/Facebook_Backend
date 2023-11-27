@@ -41,12 +41,12 @@ const createUser = async (req, res) => {
         );
 
       // firebase Image Uploading ...
-      const downloadUrl = await firebaseUploder(
-        "profile_photo",
-        await imageCompresser(req)
-      );
+      // const downloadUrl = await firebaseUploder(
+      //   "profile_photo",
+      //   await imageCompresser(req)
+      // );
       // firebase Image Uploading end...
-      newUser.profile_photo.push(downloadUrl);
+      // newUser.profile_photo.push(downloadUrl);
       await newUser?.save();
       return response(201, true, "User created sucessfully", newUser, res);
     }
