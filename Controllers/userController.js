@@ -43,7 +43,7 @@ const createUser = async (req, res) => {
       // firebase Image Uploading ...
       const downloadUrl = await firebaseUploder(
         "profile_photo",
-        imageCompresser(req)
+        await imageCompresser(req)
       );
       // firebase Image Uploading end...
       newUser.profile_photo.push(downloadUrl);
@@ -63,14 +63,10 @@ const createUser = async (req, res) => {
         );
 
       // firebase Image Uploading ...
-      const downloadUrl = await firebaseUploder(
-        "profile_photo",
-        await imageCompresser(req)
-      );
-      console.log(
-        "🚀 ~ file: userController.js:68 ~ createUser ~ downloadUrl:",
-        downloadUrl
-      );
+      // const downloadUrl = await firebaseUploder(
+      //   "profile_photo",
+      //   await imageCompresser(req)
+      // );
 
       // firebase Image Uploading end...
       newUser.profile_photo.push(downloadUrl);
@@ -126,7 +122,7 @@ const loginUser = async (req, res) => {
         token,
       });
   } catch (e) {
-    return response(500, false, e.message);
+    return response(500, false, e.message, res);
   }
 };
 const LogoutUser = async (req, res) => {
@@ -135,7 +131,7 @@ const LogoutUser = async (req, res) => {
     if (!token)
       return response(401, false, "Unable To Logout Login First", res);
     const user = await Users?.findById({ _id: req.user?._id });
-    if (!user) return response(401, false, "UnAuthorized");
+    if (!user) return response(401, false, "UnAuthorized", res);
     user.token = user?.token?.filter((elem) => elem !== token);
     await user?.save();
     return res.clearCookie("token").json({
@@ -221,7 +217,7 @@ const getallUsers = async (req, res) => {
     if (allUsers.length === 0 || allUsers == [])
       return response(404, false, "No user found", res);
 
-    return response(200, true, "allUsers", res, allUsers);
+    return response(200, true, "allUsers", allUsers, res);
   } catch (error) {
     return response(500, false, error?.message, res);
   }

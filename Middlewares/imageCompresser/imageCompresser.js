@@ -1,10 +1,10 @@
 const sharp = require("sharp");
-const imageCompresser = async (req, res, next) => {
+const imageCompresser = async (req) => {
   try {
     // const image = sharp("public/images");
-    const jpeg = await sharp(req?.file?.buffer).jpeg({
-      quality: 1,
-      compressionLevel: 6,
+    const jpeg = sharp(req?.file?.buffer).jpeg({
+      quality: 50,
+      compressionLevel: 8,
     });
     // .toFile(
     //   `public/images/${new Date(
