@@ -4,6 +4,7 @@ const {
   ref,
   getDownloadURL,
   uploadBytesResumable,
+  deleteObject,
 } = require("firebase/storage");
 const firebase = require("firebase/app");
 const { firebaseConfig } = require("../../firebase");
@@ -45,20 +46,15 @@ const storage = getStorage();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-const firebaseUploder = async (folder, image) => {
-  const sharpimg = await sharp(image).toBuffer();
+const firebaseUploder = async (folder, image, req) => {
   const storageRef = ref(
     storage,
-    `${folder}/${+" " + " " + "abc" + new Date()?.getTime()}`
+    `${folder}/${req?.file?.originalname + " " + " " + new Date()?.getTime()}`
   );
   const metadata = {
     contentType: "webp",
   };
-  const uploadedFile = await uploadBytesResumable(
-    storageRef,
-    sharpimg,
-    metadata
-  );
+  const uploadedFile = await uploadBytesResumable(storageRef, image, metadata);
 
   if (!uploadedFile)
     return response(
@@ -71,4 +67,11 @@ const firebaseUploder = async (folder, image) => {
   return downloadUrl;
 };
 
+const firebaseImageDelete = async (folder, image, req) => {
+  const storageRef = ref(
+    storage,
+    `${folder}/${req?.file?.originalname + " " + " " + new Date()?.getTime()}`
+  );
+  return await deleteObject(deleteRef);
+};
 module.exports = { upload, firebaseUploder };

@@ -9,6 +9,7 @@ const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
 const {
   imageCompresser,
 } = require("../Middlewares/imageCompresser/imageCompresser");
+const { cookie } = require("express-validator");
 // Initialize Firebase
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
@@ -34,21 +35,22 @@ const createUser = async (req, res) => {
       const newUser = new Users(user);
       if (!newUser)
         return response(
+          res,
           500,
           false,
-          "Some error occur on creating account",
-          res
+          "Some error occur on creating account"
         );
       // firebase Image Uploading ...
       const downloadUrl = await firebaseUploder(
         "profile_photo/",
-        await imageCompresser(req)
+        await imageCompresser(req),
+        req
       );
 
       // firebase Image Uploading end...
       newUser.profile_photo.push(downloadUrl);
       await newUser?.save();
-      return response(201, true, "User created sucessfully", res, newUser);
+      return response(res, 201, true, "User created sucessfully", newUser);
     }
 
     if (existsuser?.isDelete) {
@@ -56,28 +58,29 @@ const createUser = async (req, res) => {
       const newUser = new Users(user);
       if (!newUser)
         return response(
+          res,
           500,
           false,
-          "Some error occur on creating account",
-          res
+          "Some error occur on creating account"
         );
 
       // firebase Image Uploading ...
       const downloadUrl = await firebaseUploder(
         "profile_photo",
-        await imageCompresser(req)
+        await imageCompresser(req),
+        req
       );
 
       // firebase Image Uploading end...
       newUser.profile_photo.push(downloadUrl);
       await newUser?.save();
 
-      return response(201, true, "User created sucessfully", res);
+      return response(res, 201, true, "User created sucessfully", newUser);
     }
     if (!existsuser?.isDelete)
-      return response(400, false, "User Already exist", res);
+      return response(res, 400, false, "User Already exist");
   } catch (e) {
-    return response(500, false, e.message, res);
+    return response(res, 500, false, e.message);
   }
 };
 ///////////////////////////////////////////// For Loggin Users /////////////////////////////////////
@@ -87,17 +90,17 @@ const loginUser = async (req, res) => {
 
     const user = await Users?.findOne({ email: email })?.select("+password");
 
-    if (!user) return response(401, false, "User doesn't exist", res);
+    if (!user) return response(res, 401, false, "User doesn't exist");
     if (user?.isDelete !== null)
-      return response(400, false, "Can't Find User", res);
+      return response(res, 400, false, "Can't Find User");
 
     const isMatch = await bcryptjs?.compare(password, user?.password);
-    if (!isMatch) return response(401, false, "Invalid Credential", res);
+    if (!isMatch) return response(res, 401, false, "Invalid Credential");
 
     const token = jwt?.sign({ _id: user?._id }, process?.env?.JWTSCERET, {
       expiresIn: "90d",
     });
-    if (!token) return response(500, false, "Somthing went wrong", res);
+    if (!token) return response(res, 500, false, "Somthing went wrong");
 
     const newToken = new tokenModel({
       token: token,
@@ -122,24 +125,24 @@ const loginUser = async (req, res) => {
         token,
       });
   } catch (e) {
-    return response(500, false, e.message, res);
+    return response(res, 500, false, e.message);
   }
 };
 const LogoutUser = async (req, res) => {
   try {
     const { token } = req?.cookies;
     if (!token)
-      return response(401, false, "Unable To Logout Login First", res);
-    const user = await Users?.findById({ _id: req.user?._id });
-    if (!user) return response(401, false, "UnAuthorized", res);
-    user.token = user?.token?.filter((elem) => elem !== token);
-    await user?.save();
+      return response(res, 401, false, "Unable To Logout Login First");
+    // const user = await Users?.findById({ _id: req.user?._id });
+    // if (!user) return response(res, 401, false, "UnAuthorized" );
+    // user.token = user?.token?.filter((elem) => elem !== token);
+    // await user?.save();
     return res.clearCookie("token").json({
       sucess: true,
       message: "Logout SucessFully",
     });
   } catch (error) {
-    return response(500, false, error?.message, res);
+    return response(res, 500, false, error?.message);
   }
 };
 ///////////////////////////////////////////// For Removing Users /////////////////////////////////////
@@ -175,7 +178,7 @@ const removeUser = async (req, res) => {
       });
     }
   } catch (e) {
-    return response(500, false, e.message, res);
+    return response(res, 500, false, e.message);
   }
 };
 // For Updating Users
@@ -187,16 +190,16 @@ const updateUser = async (req, res) => {
       { name: name, email: email }
     );
 
-    if (!UpdatedUser) return response(500, false, "Some Error Occured", res);
+    if (!UpdatedUser) return response(res, 500, false, "Some Error Occured");
 
     UpdatedUser?.profile_photo?.push(
       `${process.env.BASEURL}/${req?.files?.profile_photo[0]?.filename}`
     );
     await UpdatedUser?.save();
 
-    return response(200, true, "Updated sucessfully", res);
+    return response(res, 200, true, "Updated sucessfully");
   } catch (e) {
-    return response(500, false, e?.message, res);
+    return response(res, 500, false, e?.message);
   }
 };
 ///////////////////////////////////////////// For Getting All Users /////////////////////////////////////
@@ -215,11 +218,11 @@ const getallUsers = async (req, res) => {
       });
     }
     if (allUsers.length === 0 || allUsers == [])
-      return response(404, false, "No user found", res);
+      return response(res, 404, false, "No user found");
 
-    return response(200, true, "allUsers", allUsers, res);
+    return response(res, 200, true, "allUsers", allUsers);
   } catch (error) {
-    return response(500, false, error?.message, res);
+    return response(res, 500, false, error?.message);
   }
 };
 const userCall = async (req, res) => {

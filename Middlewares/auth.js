@@ -10,18 +10,18 @@ const isauthenticated = async (req, res, next) => {
     const { token } = req?.cookies;
     if (!token) {
       return response(
+        res,
         401,
         false,
-        "Unable to acess PLz Login First --- please send cookies ",
-        res
+        "Unable to acess PLz Login First --- please send cookies "
       );
     }
     const decode = jwt?.verify(token, JWTSCERET);
-    if (!decode) return response(404, false, "Server Error Plz Try again", res);
+    if (!decode) return response(res, 404, false, "Server Error Plz Try again");
     req.user = await Users.findById(decode._id);
-    if (!req?.user) return response(401, false, "Does not Find The User", res);
+    if (!req?.user) return response(res, 401, false, "Does not Find The User");
   } catch (error) {
-    return response(500, false, error.message, res);
+    return response(res, 500, false, error.message);
   }
 
   next();
