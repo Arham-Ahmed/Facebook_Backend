@@ -16,18 +16,17 @@ const createPost = async (req, res) => {
     };
     const post = new Post(newPost);
     if (!post) return res.status(500).json({ message: "Some Error Occur" });
-    await post?.save();
+    // await post?.save();
     const user = await User?.findById(req?.user?._id);
     user?.posts?.push(post?._id);
     await user?.save();
-    await post.save();
     const postdownloadUrl = await firebaseUploder(
       "/post_images",
       await imageCompresser(req),
       req
     );
+    post.imageUrl.push(await postdownloadUrl);
     await post.save();
-    post.imageUrl.push(postdownloadUrl);
     return res.status(201).json({
       resStatus: res.status,
       message: "Post Created SucessFully ",
