@@ -6,9 +6,7 @@ const PostScehma = new mongoose.Schema(
       type: String,
       required: [true, "Plz Add Some Text"],
     },
-    imageUrl: {
-      type: String,
-    },
+    imageUrl: [{ type: String }],
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

@@ -1,14 +1,17 @@
+const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
 const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
 const { response } = require("../utils/response");
+const {
+  imageCompresser,
+} = require("../Middlewares/imageCompresser/imageCompresser");
 
 // For Creating Post
 const createPost = async (req, res) => {
   try {
     const newPost = {
       caption: req?.body?.caption,
-      imageUrl: `${process.env.BASEURL}/${req?.files?.imageUrl?.[0]?.filename}`,
       owner: req?.user?._id,
     };
     const post = new Post(newPost);
@@ -17,7 +20,15 @@ const createPost = async (req, res) => {
     const user = await User?.findById(req?.user?._id);
     user?.posts?.push(post?._id);
     await user?.save();
-    res.status(201).json({
+    await post.save();
+    const postdownloadUrl = await firebaseUploder(
+      "/post_images",
+      await imageCompresser(req),
+      req
+    );
+    await post.save();
+    post.imageUrl.push(postdownloadUrl);
+    return res.status(201).json({
       resStatus: res.status,
       message: "Post Created SucessFully ",
     });
@@ -90,7 +101,7 @@ const removePost = async (req, res) => {
       return res.status(404).json({ sucess: false, message: "Post are Empty" });
 
     if (post.owner.toHexString() !== req?.user?.id) {
-      return response(400, false, "Your are not login with this account", res);
+      return response(res, 400, false, "Your are not login with this account");
     }
     const Deletepost = await Post?.findByIdAndDelete({ _id: id });
     res.status(200).json({

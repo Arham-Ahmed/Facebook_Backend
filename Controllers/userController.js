@@ -9,7 +9,6 @@ const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
 const {
   imageCompresser,
 } = require("../Middlewares/imageCompresser/imageCompresser");
-const { cookie } = require("express-validator");
 // Initialize Firebase
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
