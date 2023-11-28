@@ -128,10 +128,11 @@ const removePost = async (req, res) => {
     user?.posts?.splice(indexofPost, 1);
     await user?.save();
   } catch (error) {
-    res.status(500).json({
-      sucess: false,
-      message: error.message,
-    });
+    return response(
+      res,
+      500,
+      `Erro on postController line number 131 ${error.message}`
+    );
   }
 };
 module.exports = {

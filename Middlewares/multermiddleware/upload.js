@@ -1,4 +1,5 @@
 const multer = require("multer");
+const { v4: uuidv4 } = require("uuid");
 const {
   getStorage,
   ref,
@@ -46,13 +47,9 @@ const storage = getStorage();
 const upload = multer({ storage: multer.memoryStorage() });
 
 const firebaseUploder = async (req, folder, image) => {
-  const objKey = Object?.values(req?.files)[0][0].originalname;
+  const objKey = Object?.values(req?.files)[0][0]?.originalname.split(".")[0];
 
-  // const feildName = req?.files?.objKey;
-  const storageRef = ref(
-    storage,
-    `${folder}/${objKey + " " + " " + new Date().getDate()}`
-  );
+  const storageRef = ref(storage, `${folder}/${objKey + " " + " " + uuidv4()}`);
   const metadata = {
     contentType: "webp",
   };

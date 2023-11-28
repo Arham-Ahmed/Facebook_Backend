@@ -37,7 +37,15 @@ const createUser = async (req, res) => {
           "Some error occur on creating account"
         );
       // firebase Image Uploading ...
-      // if (req?.files?.profile_photo?.length === 1) {
+      if (req?.files?.profile_photo?.length > 1) {
+        return response(
+          res,
+          400,
+          false,
+          "You can Upload 1 image at a time",
+          newUser
+        );
+      }
       req?.files?.profile_photo.forEach(async (img) => {
         const downloadUrl = await firebaseUploder(
           req,
@@ -48,16 +56,6 @@ const createUser = async (req, res) => {
         await newUser.save();
       });
       await newUser.save();
-
-      // } else {
-      //   return response(
-      //     res,
-      //     400,
-      //     false,
-      //     "You can Upload 1 image at a time",
-      //     newUser
-      //   );
-      // }
 
       // firebase Image Uploading end...
 
