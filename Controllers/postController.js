@@ -3,7 +3,7 @@ const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
 const { response } = require("../utils/response");
-const { imageCompresser } = require("../utils/imageCompresser/imageCompresser");
+const { imageCompressor } = require("../utils/imageCompressor/imageCompressor");
 
 // For Creating Post
 const createPost = async (req, res) => {
@@ -18,31 +18,35 @@ const createPost = async (req, res) => {
     user?.posts?.push(post?._id);
     await user?.save();
 
-    if (req?.files.imageUrl > 0) {
-      const postimg = req?.files?.imageUrl[0]?.buffer;
+    if (req?.files?.imageUrl.length >= 0) {
+      // const postimg = req?.files?.imageUrl[0]?.buffer;
 
-      if (req?.files?.imageUrl?.length > 1) {
-        req?.files?.imageUrl.forEach(async (img) => {
-          const postdownloadUrl = await firebaseUploder(
-            res,
-            req,
-            "/post_images",
-            await imageCompresser(img)
-          );
-          post.imageUrl.push(await postdownloadUrl);
-        });
-      } else {
+      // if (req?.files?.imageUrl?.length >= 0) {
+
+      req?.files?.imageUrl?.forEach(async (img, index) => {
         const postdownloadUrl = await firebaseUploder(
           res,
           req,
+          index,
           "/post_images",
-          await imageCompresser(postimg)
+          await imageCompressor(img)
         );
-        post.imageUrl.push(await postdownloadUrl);
-        await post.save();
-      }
+        post?.imageUrl?.push(await postdownloadUrl);
+      });
+      await post.save();
+
+      // } else {
+      //   const postdownloadUrl = await firebaseUploder(
+      //     res,
+      //     req,
+      //     "/post_images",
+      //     await imageCompressor(postimg)
+      //   );
+      //   post?.imageUrl?.push(await postdownloadUrl);
+      //   await post.save();
+      // }
     }
-    await post?.save();
+    // await post?.save();
 
     return res.status(201).json({
       resStatus: res.status,

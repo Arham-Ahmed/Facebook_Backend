@@ -6,7 +6,7 @@ const { response } = require("../utils/response");
 const moment = require("moment");
 
 const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
-const { imageCompresser } = require("../utils/imageCompresser/imageCompresser");
+const { imageCompressor } = require("../utils/imageCompressor/imageCompressor");
 // Initialize Firebase
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
@@ -38,11 +38,12 @@ const createUser = async (req, res) => {
           "Some error occur on creating account"
         );
       // firebase Image Uploading ...
-      if (req?.files?.profile_photo?.length > 1) {
+      if (req?.files?.profile_photo[0]?.length > 1) {
         return response(
           res,
           400,
           false,
+          req?.files?.profile_photo[0].length,
           "You can Upload 1 image at a time",
           newUser
         );
@@ -51,8 +52,9 @@ const createUser = async (req, res) => {
       const downloadUrl = await firebaseUploder(
         res,
         req,
+        req?.files?.profile_photo[0].length,
         "profile_photo",
-        await imageCompresser(img)
+        await imageCompressor(img)
       );
       newUser?.profile_photo.push(downloadUrl);
       await newUser.save();
@@ -77,7 +79,7 @@ const createUser = async (req, res) => {
       // // firebase Image Uploading ...
       // const downloadUrl = await firebaseUploder(
       //   "profile_photo",
-      //   await imageCompresser(req),
+      //   await imageCompressor(req),
       //   req
       // );
 
@@ -90,7 +92,7 @@ const createUser = async (req, res) => {
         res,
         req,
         "profile_photo",
-        await imageCompresser(img)
+        await imageCompressor(img)
       );
       newUser.profile_photo.push(downloadUrl);
       await newUser.save();
@@ -216,7 +218,8 @@ const updateUser = async (req, res) => {
     if (!UpdatedUser) return response(res, 500, false, "Some Error Occured");
 
     // const mimetype = req?.files?.profile_photo[0][];
-    const Filemimetype = Object?.values(req?.files)[0][0].mimetype;
+    // const Filemimetype = Object?.values(req?.files)[0][0].mimetype;
+    const Filemimetype = req?.files?.profile_photo[0].mimetype;
 
     if (!Filemimetype.includes("image/"))
       return response(
@@ -226,15 +229,16 @@ const updateUser = async (req, res) => {
         "Invalid file format -- Please upload an image"
       );
 
-    if (req?.files?.profile_photo?.length > 1) {
+    if (req?.files?.profile_photo[0]?.length > 1) {
       return response(res, 400, false, `cant upload more than 1 image`);
     }
 
     const downloadUrl = await firebaseUploder(
       res,
       req,
+      req?.files?.profile_photo?.length,
       "profile_photo",
-      await imageCompresser(req?.files?.profile_photo[0])
+      await imageCompressor(req?.files?.profile_photo[0].buffer)
     );
     UpdatedUser?.profile_photo?.push(downloadUrl);
     await UpdatedUser?.save();

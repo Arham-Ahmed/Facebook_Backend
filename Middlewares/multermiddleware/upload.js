@@ -17,10 +17,17 @@ const storage = getStorage();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-const firebaseUploder = async (res, req, folder, image) => {
-  const objKey = Object?.values(req?.files)[0][0]?.originalname.split(".")[0];
+const firebaseUploder = async (res, req, index, folder, image) => {
+  // console.log(index);
+  // console.log(Object?.values(req?.files)[0][index].originalname?.split(".")[0]);
+  const fileName = Object?.values(req?.files)[0][index]?.originalname?.split(
+    "."
+  )[0];
 
-  const storageRef = ref(storage, `${folder}/${objKey + " " + " " + uuidv4()}`);
+  const storageRef = ref(
+    storage,
+    `${folder}/${fileName + " " + " " + uuidv4()}`
+  );
   const metadata = {
     contentType: "webp",
   };
