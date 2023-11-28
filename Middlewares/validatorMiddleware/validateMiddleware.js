@@ -10,7 +10,7 @@ const validateMiddleware = (req, res, next) => {
           .min(3)
           .max(20)
           // .trim(true)
-          .regex(/^[^\s]+$/)
+          .regex(/^[^\{}]+$/)
           .required(),
         email: Joi.string()
           .email()

@@ -17,25 +17,30 @@ const createPost = async (req, res) => {
     const user = await User?.findById(req?.user?._id);
     user?.posts?.push(post?._id);
     await user?.save();
-    if (req?.files?.imageUrl?.length > 1) {
-      req?.files?.imageUrl.forEach(async (img) => {
+
+    if (req?.files.imageUrl > 0) {
+      const postimg = req?.files?.imageUrl[0]?.buffer;
+
+      if (req?.files?.imageUrl?.length > 1) {
+        req?.files?.imageUrl.forEach(async (img) => {
+          const postdownloadUrl = await firebaseUploder(
+            res,
+            req,
+            "/post_images",
+            await imageCompresser(img)
+          );
+          post.imageUrl.push(await postdownloadUrl);
+        });
+      } else {
         const postdownloadUrl = await firebaseUploder(
           res,
           req,
           "/post_images",
-          await imageCompresser(img)
+          await imageCompresser(postimg)
         );
         post.imageUrl.push(await postdownloadUrl);
-      });
-    } else {
-      const postdownloadUrl = await firebaseUploder(
-        res,
-        req,
-        "/post_images",
-        await imageCompresser(req?.files?.imageUrl[0])
-      );
-      post.imageUrl.push(await postdownloadUrl);
-      await post.save();
+        await post.save();
+      }
     }
     await post?.save();
 

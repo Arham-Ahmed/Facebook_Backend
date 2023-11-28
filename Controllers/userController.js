@@ -26,6 +26,7 @@ const createUser = async (req, res) => {
       email: req?.body?.email,
       password: req?.body?.password,
     };
+    const img = req?.files?.profile_photo[0]?.buffer;
     const existsuser = await Users?.findOne({ email: user?.email });
     if (!existsuser) {
       const newUser = new Users(user);
@@ -46,16 +47,14 @@ const createUser = async (req, res) => {
           newUser
         );
       }
-      req?.files?.profile_photo.forEach(async (img) => {
-        const downloadUrl = await firebaseUploder(
-          res,
-          req,
-          "profile_photo",
-          await imageCompresser(img)
-        );
-        newUser.profile_photo.push(downloadUrl);
-        await newUser.save();
-      });
+
+      const downloadUrl = await firebaseUploder(
+        res,
+        req,
+        "profile_photo",
+        await imageCompresser(img)
+      );
+      newUser?.profile_photo.push(downloadUrl);
       await newUser.save();
 
       // firebase Image Uploading end...
@@ -85,19 +84,16 @@ const createUser = async (req, res) => {
       // // firebase Image Uploading end...
       // newUser.profile_photo.push(downloadUrl);
       // await newUser?.save();
-      console.log(req?.files?.profile_photo?.length);
-      if (req?.files?.profile_photo?.length === 1) {
-        req?.files?.profile_photo.forEach(async (img) => {
-          const downloadUrl = await firebaseUploder(
-            res,
-            req,
-            "profile_photo",
-            await imageCompresser(img)
-          );
-          newUser.profile_photo.push(downloadUrl);
-          await newUser.save();
-        });
-      }
+      // console.log(req?.files?.profile_photo?.length);
+
+      const downloadUrl = await firebaseUploder(
+        res,
+        req,
+        "profile_photo",
+        await imageCompresser(img)
+      );
+      newUser.profile_photo.push(downloadUrl);
+      await newUser.save();
 
       return response(res, 201, true, "User created sucessfully", newUser);
     }
