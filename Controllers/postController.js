@@ -20,6 +20,7 @@ const createPost = async (req, res) => {
     if (req?.files?.imageUrl?.length > 1) {
       req?.files?.imageUrl.forEach(async (img) => {
         const postdownloadUrl = await firebaseUploder(
+          res,
           req,
           "/post_images",
           await imageCompresser(img)
@@ -28,6 +29,7 @@ const createPost = async (req, res) => {
       });
     } else {
       const postdownloadUrl = await firebaseUploder(
+        res,
         req,
         "/post_images",
         await imageCompresser(req?.files?.imageUrl[0])

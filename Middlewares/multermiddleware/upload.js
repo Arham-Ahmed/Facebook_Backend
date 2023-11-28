@@ -9,44 +9,15 @@ const {
 } = require("firebase/storage");
 const firebase = require("firebase/app");
 const { firebaseConfig } = require("../../firebase");
+const { response } = require("../../utils/response");
 
 firebase.initializeApp(firebaseConfig);
-
-// const fileDestination = (req, file, cb /*callback*/) => {
-//   if (!fs?.existsSync("public")) {
-//     fs?.mkdir("public");
-//   }
-//   if (!fs?.existsSync("public/images")) {
-//     fs?.mkdir("public/images");
-//   }
-//   cb(null, "public/images");
-// };
-// const filename = (req, file, cb) => {
-//   cb(null, Date?.now() + file?.originalname);
-// };
-// const storage = multer?.diskStorage({
-//   destination: fileDestination,
-//   filename: filename,
-// });
-
-// const filefilter = (req, file, cb) => {
-//   if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
-//     cb(null, true);
-//   } else {
-//     cb(new Error("Unsupported File Format"));
-//   }
-// };
-
-// const upload = multer({
-//   storage: storage,
-//   fileFilter: filefilter,
-// });
 
 const storage = getStorage();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-const firebaseUploder = async (req, folder, image) => {
+const firebaseUploder = async (res, req, folder, image) => {
   const objKey = Object?.values(req?.files)[0][0]?.originalname.split(".")[0];
 
   const storageRef = ref(storage, `${folder}/${objKey + " " + " " + uuidv4()}`);
@@ -57,10 +28,10 @@ const firebaseUploder = async (req, folder, image) => {
 
   if (!uploadedFile)
     return response(
+      res,
       500,
       false,
-      "Error on uploading iamge on Firebase line 53",
-      res
+      "Error on uploading iamge on Firebase line 53"
     );
   const downloadUrl = await getDownloadURL(uploadedFile.ref);
   return downloadUrl;

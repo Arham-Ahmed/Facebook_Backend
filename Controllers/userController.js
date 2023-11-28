@@ -48,6 +48,7 @@ const createUser = async (req, res) => {
       }
       req?.files?.profile_photo.forEach(async (img) => {
         const downloadUrl = await firebaseUploder(
+          res,
           req,
           "profile_photo",
           await imageCompresser(img)
@@ -88,6 +89,7 @@ const createUser = async (req, res) => {
       if (req?.files?.profile_photo?.length === 1) {
         req?.files?.profile_photo.forEach(async (img) => {
           const downloadUrl = await firebaseUploder(
+            res,
             req,
             "profile_photo",
             await imageCompresser(img)
@@ -155,10 +157,6 @@ const LogoutUser = async (req, res) => {
     const { token } = req?.cookies;
     if (!token)
       return response(res, 401, false, "Unable To Logout Login First");
-    // const user = await Users?.findById({ _id: req.user?._id });
-    // if (!user) return response(res, 401, false, "UnAuthorized" );
-    // user.token = user?.token?.filter((elem) => elem !== token);
-    // await user?.save();
     return res.clearCookie("token").json({
       sucess: true,
       message: "Logout SucessFully",
@@ -206,6 +204,13 @@ const removeUser = async (req, res) => {
 // For Updating Users
 const updateUser = async (req, res) => {
   try {
+    if (!req)
+      return response(
+        res,
+        500,
+        false,
+        "Internal server error cannot get req file :~ ulpoad.js on line 21 "
+      );
     const { email, name } = req?.body;
     const UpdatedUser = await Users?.findOneAndUpdate(
       { _id: req?.user?._id },
@@ -214,21 +219,44 @@ const updateUser = async (req, res) => {
 
     if (!UpdatedUser) return response(res, 500, false, "Some Error Occured");
 
-    if (req?.files?.profile_photo?.length === 1) {
-      const downloadUrl = await firebaseUploder(
-        req,
-        "profile_photo",
-        await imageCompresser(req?.files?.profile_photo[0])
+    // const mimetype = req?.files?.profile_photo[0][];
+    const Filemimetype = Object?.values(req?.files)[0][0].mimetype;
+    console.log(
+      "🚀 ~ file: userController.js:224 ~ updateUser ~ Filemimetype:",
+      Filemimetype.includes("image/")
+    );
+
+    if (!Filemimetype.includes("image/"))
+      return response(
+        res,
+        500,
+        false,
+        "Invalid file format -- Please upload an image"
       );
-      UpdatedUser?.profile_photo?.push(downloadUrl);
-      await UpdatedUser?.save();
+
+    if (req?.files?.profile_photo?.length > 1) {
+      return response(res, 400, false, `cant upload more than 1 image`);
     }
+
+    const downloadUrl = await firebaseUploder(
+      res,
+      req,
+      "profile_photo",
+      await imageCompresser(req?.files?.profile_photo[0])
+    );
+    UpdatedUser?.profile_photo?.push(downloadUrl);
+    await UpdatedUser?.save();
 
     // await UpdatedUser?.save();
 
     return response(res, 200, true, "Updated sucessfully", UpdatedUser);
   } catch (e) {
-    return response(res, 500, false, e?.message);
+    response(
+      res,
+      500,
+      false,
+      `error on userController line number 234${e?.message}`
+    );
   }
 };
 ///////////////////////////////////////////// For Getting All Users /////////////////////////////////////

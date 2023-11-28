@@ -88,7 +88,7 @@ const start = async (url) => {
         "\x1b[36m",
         // "\x1b[1m",
         // "\x1b[4m",
-        "\x1b[5m",
+        // "\x1b[5m",
         "http://localhost:5000",
         "\x1b[0m"
       );
@@ -98,7 +98,7 @@ const start = async (url) => {
     if (connectDb) {
       console.log("\x1b[32m", "Connected");
     } else {
-      console.log("\x1b[31m", "not Connected");
+      console.log("\x1b[31m", "not Connected", "\x1b[39m");
     }
   } catch (error) {
     console.log(error);
