@@ -221,10 +221,6 @@ const updateUser = async (req, res) => {
 
     // const mimetype = req?.files?.profile_photo[0][];
     const Filemimetype = Object?.values(req?.files)[0][0].mimetype;
-    console.log(
-      "🚀 ~ file: userController.js:224 ~ updateUser ~ Filemimetype:",
-      Filemimetype.includes("image/")
-    );
 
     if (!Filemimetype.includes("image/"))
       return response(

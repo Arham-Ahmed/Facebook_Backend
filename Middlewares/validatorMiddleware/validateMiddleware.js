@@ -9,7 +9,7 @@ const validateMiddleware = (req, res, next) => {
         name: Joi.string()
           .min(3)
           .max(20)
-          .trim(true)
+          // .trim(true)
           .regex(/^[^\s]+$/)
           .required(),
         email: Joi.string()
@@ -30,9 +30,9 @@ const validateMiddleware = (req, res, next) => {
       })
       .unknown(true);
     const { error } = schema.validate(req?.body);
-    if (error) return response(400, false, error?.details, res);
+    if (error) return response(res, 400, false, error?.details);
   } catch (error) {
-    return response(500, false, error.message, res);
+    return response(res, 500, false, error.message);
   }
   next();
 };
