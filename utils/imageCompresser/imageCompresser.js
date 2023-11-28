@@ -4,8 +4,8 @@ const sharp = require("sharp");
 const imageCompresser = async (req) => {
   try {
     const convertedimage = sharp(req?.buffer).webp({
-      quality: 10,
-      compressionLevel: 8,
+      quality: 50,
+      compressionLevel: 7,
     });
     return await convertedimage.toBuffer();
   } catch (error) {

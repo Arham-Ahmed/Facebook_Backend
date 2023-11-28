@@ -1,5 +1,7 @@
+const { response } = require("express");
 const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
+const UserModel = require("../Models/User");
 
 const Like = async (req, res) => {
   try {
@@ -70,9 +72,26 @@ const CreateComment = async (req, res) => {
     await currPost.save();
     await newComment.save();
 
+    const Commenter = await UserModel.findById({
+      _id: newComment?.owner,
+    }).select([
+      "-role",
+      "-token",
+      "-posts",
+      "-todos",
+      "-followers",
+      "-following",
+      "-cover_photo",
+      "-email",
+      "-isDelete",
+    ]);
+    if (!Commenter)
+      return response(res, 404, "Some error occured on interaction.js line 76");
     res.status(200).json({
       sucuess: true,
       message: "Comment Add",
+      newComment,
+      user: Commenter,
     });
   } catch (error) {
     res.status(500).json({

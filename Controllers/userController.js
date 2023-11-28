@@ -25,7 +25,6 @@ const createUser = async (req, res) => {
       name: req?.body?.name,
       email: req?.body?.email,
       password: req?.body?.password,
-      // profile_photo: `http://localhost:5000/${req?.files?.profile_photo[0]?.filename}`,
     };
     const existsuser = await Users?.findOne({ email: user?.email });
     if (!existsuser) {
@@ -38,21 +37,27 @@ const createUser = async (req, res) => {
           "Some error occur on creating account"
         );
       // firebase Image Uploading ...
-      // const downloadUrl = await firebaseUploder(
-      //   "profile_photo/",
-      //   await imageCompresser(req)
-      // );
-      if (req?.files?.profile_photo?.length === 1) {
-        req?.files?.profile_photo.forEach(async (e) => {
-          const downloadUrl = await firebaseUploder(
-            "profile_photo",
-            await imageCompresser(e),
-            req
-          );
-          newUser.profile_photo.push(downloadUrl);
-          await newUser.save();
-        });
-      }
+      // if (req?.files?.profile_photo?.length === 1) {
+      req?.files?.profile_photo.forEach(async (img) => {
+        const downloadUrl = await firebaseUploder(
+          req,
+          "profile_photo",
+          await imageCompresser(img)
+        );
+        newUser.profile_photo.push(downloadUrl);
+        await newUser.save();
+      });
+      await newUser.save();
+
+      // } else {
+      //   return response(
+      //     res,
+      //     400,
+      //     false,
+      //     "You can Upload 1 image at a time",
+      //     newUser
+      //   );
+      // }
 
       // firebase Image Uploading end...
 
@@ -83,11 +88,11 @@ const createUser = async (req, res) => {
       // await newUser?.save();
       console.log(req?.files?.profile_photo?.length);
       if (req?.files?.profile_photo?.length === 1) {
-        req?.files?.profile_photo.forEach(async (e) => {
+        req?.files?.profile_photo.forEach(async (img) => {
           const downloadUrl = await firebaseUploder(
+            req,
             "profile_photo",
-            await imageCompresser(e),
-            req
+            await imageCompresser(img)
           );
           newUser.profile_photo.push(downloadUrl);
           await newUser.save();
@@ -213,9 +218,9 @@ const updateUser = async (req, res) => {
 
     if (req?.files?.profile_photo?.length === 1) {
       const downloadUrl = await firebaseUploder(
+        req,
         "profile_photo",
         await imageCompresser(req?.files?.profile_photo[0])
-        // req
       );
       UpdatedUser?.profile_photo?.push(downloadUrl);
       await UpdatedUser?.save();
