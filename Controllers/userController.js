@@ -27,6 +27,7 @@ const createUser = async (req, res) => {
       password: req?.body?.password,
     };
     const img = req?.files?.profile_photo[0]?.buffer;
+    const index = req?.files?.profile_photo[0]?.length;
     const existsuser = await Users?.findOne({ email: user?.email });
     if (!existsuser) {
       const newUser = new Users(user);
@@ -43,16 +44,15 @@ const createUser = async (req, res) => {
           res,
           400,
           false,
-          req?.files?.profile_photo[0].length,
-          "You can Upload 1 image at a time",
-          newUser
+          index,
+          "You can Upload 1 image at a time"
         );
       }
 
       const downloadUrl = await firebaseUploder(
         res,
         req,
-        req?.files?.profile_photo[0].length,
+        index,
         "profile_photo",
         await imageCompressor(img)
       );
@@ -60,8 +60,6 @@ const createUser = async (req, res) => {
       await newUser.save();
 
       // firebase Image Uploading end...
-
-      // await newUser?.save();
       return response(res, 201, true, "User created sucessfully", newUser);
     }
 
@@ -164,7 +162,6 @@ const LogoutUser = async (req, res) => {
   }
 };
 ///////////////////////////////////////////// For Removing Users /////////////////////////////////////
-
 const removeUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
@@ -199,7 +196,7 @@ const removeUser = async (req, res) => {
     return response(res, 500, false, e.message);
   }
 };
-// For Updating Users
+///////////////////////////////////////////// For Updating Users /////////////////////////////////////
 const updateUser = async (req, res) => {
   try {
     if (!req)
@@ -255,7 +252,7 @@ const updateUser = async (req, res) => {
     );
   }
 };
-///////////////////////////////////////////// For Getting All Users /////////////////////////////////////
+//////////////////////////////////////////// For Getting All Users ////////////////////////////////////
 
 const getallUsers = async (req, res) => {
   try {

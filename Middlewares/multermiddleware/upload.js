@@ -18,8 +18,6 @@ const storage = getStorage();
 const upload = multer({ storage: multer.memoryStorage() });
 
 const firebaseUploder = async (res, req, index, folder, image) => {
-  // console.log(index);
-  // console.log(Object?.values(req?.files)[0][index].originalname?.split(".")[0]);
   const fileName = Object?.values(req?.files)[0][index]?.originalname?.split(
     "."
   )[0];
@@ -40,7 +38,7 @@ const firebaseUploder = async (res, req, index, folder, image) => {
       false,
       "Error on uploading iamge on Firebase line 53"
     );
-  const downloadUrl = await getDownloadURL(uploadedFile.ref);
+  const downloadUrl = await getDownloadURL(uploadedFile?.ref);
   return downloadUrl;
 };
 

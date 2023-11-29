@@ -18,20 +18,27 @@ const createPost = async (req, res) => {
     user?.posts?.push(post?._id);
     await user?.save();
 
-    if (req?.files?.imageUrl.length >= 0) {
+    if (!req?.files) {
+      await post?.save();
+    }
+
+    if (req?.files?.imageUrl?.length > 0) {
       // const postimg = req?.files?.imageUrl[0]?.buffer;
 
       // if (req?.files?.imageUrl?.length >= 0) {
 
       req?.files?.imageUrl?.forEach(async (img, index) => {
-        const postdownloadUrl = await firebaseUploder(
+        const CompressedImg = await imageCompressor(img);
+        const postdownloadUrl =await firebaseUploder(
           res,
           req,
           index,
           "/post_images",
-          await imageCompressor(img)
+          CompressedImg
         );
-        post?.imageUrl?.push(await postdownloadUrl);
+        post?.imageUrl?.push( postdownloadUrl);
+        await post.save();
+        await user.save();
       });
       await post.save();
 
@@ -46,11 +53,11 @@ const createPost = async (req, res) => {
       //   await post.save();
       // }
     }
-    // await post?.save();
 
     return res.status(201).json({
       resStatus: res.status,
       message: "Post Created SucessFully ",
+      postimageUrl: post.imageUrl,
     });
   } catch (e) {
     res.status(500).json({ error: e.message });
@@ -93,17 +100,17 @@ const getallPost = async (req, res) => {
 };
 const getallUserPost = async (req, res) => {
   try {
-    const posts = await Post?.find({ owner: req.user._id })
-      ?.sort()
+    const posts = await Post?.find({ owner: req.user?._id })
+      ?.sort("-1")
       .populate(["owner", "likes", "comments"]);
     if (posts?.length === 0) return res.json({ message: "No Posts Available" });
-    res.status(200).json({
+    return res.status(200).json({
       sucess: true,
       resStatus: res.status,
       Posts: posts,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       sucess: false,
       message: error.message,
     });
@@ -128,12 +135,12 @@ const removePost = async (req, res) => {
       sucess: true,
       message: "Post Deleted Sucessfully",
     });
-    post.comments;
-    if (post?.comments?.length > 0) {
-      for (let index = 0; index < post?.comments?.length; index++) {
-        Comment?.findByIdAndDelete({ _id });
-      }
-    }
+    // post.comments;
+    // if (post?.comments?.length > 0) {
+    //   for (let index = 0; index < post?.comments?.length; index++) {
+    //     Comment?.findByIdAndDelete({ _id });
+    //   }
+    // }
     const user = await User?.findById({ _id: req.user.id });
     const indexofPost = user?.posts?.indexOf(post._id);
     user?.posts?.splice(indexofPost, 1);
