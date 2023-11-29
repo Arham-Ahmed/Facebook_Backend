@@ -21,13 +21,20 @@ const Option = {
 ///////////////////////////////////////////// For Creating Users /////////////////////////////////////
 const createUser = async (req, res) => {
   try {
+    if (!req)
+      return response(
+        res,
+        500,
+        false,
+        "Internal server error cannot get req file :~ userController.js on line 24 "
+      );
     const user = {
       name: req?.body?.name,
       email: req?.body?.email,
       password: req?.body?.password,
     };
-    const img = req?.files?.profile_photo[0]?.buffer;
-    const index = req?.files?.profile_photo[0]?.length;
+    // const img = req?.files?.profile_photo[0]?.buffer; //  Confusion on using this is right
+    // const index = req?.files?.profile_photo[0]?.length; //  Confusion on using this is right
     const existsuser = await Users?.findOne({ email: user?.email });
     if (!existsuser) {
       const newUser = new Users(user);
@@ -38,23 +45,27 @@ const createUser = async (req, res) => {
           false,
           "Some error occur on creating account"
         );
-      // firebase Image Uploading ...
-      if (req?.files?.profile_photo[0]?.length > 1) {
+
+      const Filemimetype = req?.files?.profile_photo[0].mimetype;
+      if (!Filemimetype.includes("image/"))
         return response(
           res,
-          400,
+          500,
           false,
-          index,
-          "You can Upload 1 image at a time"
+          "Invalid file format -- Please upload an image"
         );
+
+      // firebase Image Uploading ...
+      if (req?.files?.profile_photo[0]?.length > 1) {
+        return response(res, 400, false, "You can Upload 1 image at a time");
       }
 
       const downloadUrl = await firebaseUploder(
         res,
         req,
-        index,
+        req?.files?.profile_photo[0]?.length,
         "profile_photo",
-        await imageCompressor(img)
+        await imageCompressor(req?.files?.profile_photo[0]?.buffer)
       );
       newUser?.profile_photo.push(downloadUrl);
       await newUser.save();
@@ -90,7 +101,7 @@ const createUser = async (req, res) => {
         res,
         req,
         "profile_photo",
-        await imageCompressor(img)
+        await imageCompressor(req?.files?.profile_photo[0]?.buffer)
       );
       newUser.profile_photo.push(downloadUrl);
       await newUser.save();
@@ -204,7 +215,7 @@ const updateUser = async (req, res) => {
         res,
         500,
         false,
-        "Internal server error cannot get req file :~ ulpoad.js on line 21 "
+        "Internal server error cannot get req file :~ userController.js on line 203 "
       );
     const { email, name } = req?.body;
     const UpdatedUser = await Users?.findOneAndUpdate(

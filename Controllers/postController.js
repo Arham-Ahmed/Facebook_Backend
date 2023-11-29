@@ -5,9 +5,16 @@ const User = require("../Models/User");
 const { response } = require("../utils/response");
 const { imageCompressor } = require("../utils/imageCompressor/imageCompressor");
 
-// For Creating Post
+////////////////////////////////// For Creating Post /////////////////////////////
 const createPost = async (req, res) => {
   try {
+    if (!req)
+      return response(
+        res,
+        500,
+        false,
+        "Internal server error cannot get req file :~ userController.js on line 24 "
+      );
     const newPost = {
       caption: req?.body?.caption,
       owner: req?.user?._id,
@@ -23,35 +30,30 @@ const createPost = async (req, res) => {
     }
 
     if (req?.files?.imageUrl?.length > 0) {
-      // const postimg = req?.files?.imageUrl[0]?.buffer;
+      const imageArray = req?.files?.imageUrl?.map(async (img, index) => {
+        const Filemimetype = img.mimetype;
+        if (!Filemimetype.includes("image/"))
+          return response(
+            res,
+            500,
+            false,
+            "Invalid file format -- Please upload an image"
+          );
 
-      // if (req?.files?.imageUrl?.length >= 0) {
-
-      req?.files?.imageUrl?.forEach(async (img, index) => {
         const CompressedImg = await imageCompressor(img);
-        const postdownloadUrl =await firebaseUploder(
+        const postdownloadUrl = await firebaseUploder(
           res,
           req,
           index,
           "/post_images",
           CompressedImg
         );
-        post?.imageUrl?.push( postdownloadUrl);
-        await post.save();
-        await user.save();
+        return postdownloadUrl;
       });
-      await post.save();
 
-      // } else {
-      //   const postdownloadUrl = await firebaseUploder(
-      //     res,
-      //     req,
-      //     "/post_images",
-      //     await imageCompressor(postimg)
-      //   );
-      //   post?.imageUrl?.push(await postdownloadUrl);
-      //   await post.save();
-      // }
+      const allPromis = await Promise.all(imageArray);
+      post.imageUrl.push(...allPromis);
+      await post.save();
     }
 
     return res.status(201).json({
