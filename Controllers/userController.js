@@ -176,7 +176,10 @@ const LogoutUser = async (req, res) => {
 const removeUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
-    const user = await Users?.findOne({ email: email })?.select("+password");
+    const user = await Users?.findOne({ email: email })?.select([
+      "+password",
+      "+isDelete",
+    ]);
     if (!user) {
       res.status(404).json({
         sucess: false,

@@ -81,7 +81,6 @@ const UserSchema = new mongoose.Schema(
     isDelete: {
       type: String,
       default: null,
-      select: false,
     },
   },
   { timestamps: true }
