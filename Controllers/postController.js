@@ -1,4 +1,7 @@
-const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
+const {
+  firebaseUploder,
+  firebaseImageDelete,
+} = require("../Middlewares/multermiddleware/upload");
 const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
@@ -28,7 +31,6 @@ const createPost = async (req, res) => {
     if (!req?.files) {
       await post?.save();
     }
-
     if (req?.files?.imageUrl?.length > 0) {
       const imageArray = req?.files?.imageUrl?.map(async (img, index) => {
         const Filemimetype = img.mimetype;
@@ -50,7 +52,6 @@ const createPost = async (req, res) => {
         );
         return postdownloadUrl;
       });
-
       const allPromis = await Promise.all(imageArray);
       post.imageUrl.push(...allPromis);
       await post.save();
@@ -123,16 +124,25 @@ const getallUserPost = async (req, res) => {
 const removePost = async (req, res) => {
   try {
     const { id } = req?.params;
-
     const post = await Post?.findOne({ _id: id });
-
     if (!post)
       return res.status(404).json({ sucess: false, message: "Post are Empty" });
-
     if (post.owner.toHexString() !== req?.user?.id) {
       return response(res, 400, false, "Your are not login with this account");
     }
+    const refr = post?.imageUrl?.map(async (image, index) => {
+      const deleteImagPath = image
+        .split("/")
+        [image.split("/").length - 1].replaceAll("%", "")
+        .split("?")[0]
+        .replace("2F", "/");
+
+      await firebaseImageDelete(deleteImagPath, res);
+
+      // await firebaseImageDelete(deleteImagPath);
+    });
     const Deletepost = await Post?.findByIdAndDelete({ _id: id });
+
     res.status(200).json({
       sucess: true,
       message: "Post Deleted Sucessfully",
@@ -143,6 +153,7 @@ const removePost = async (req, res) => {
     //     Comment?.findByIdAndDelete({ _id });
     //   }
     // }
+
     const user = await User?.findById({ _id: req.user.id });
     const indexofPost = user?.posts?.indexOf(post._id);
     user?.posts?.splice(indexofPost, 1);

@@ -69,16 +69,19 @@ const UserSchema = new mongoose.Schema(
     role: {
       type: String,
       default: "user",
+      select: false,
     },
     token: [
       {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Token",
+        select: false,
       },
     ],
     isDelete: {
       type: String,
       default: null,
+      select: false,
     },
   },
   { timestamps: true }

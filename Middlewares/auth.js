@@ -19,7 +19,8 @@ const isauthenticated = async (req, res, next) => {
     const decode = jwt?.verify(token, JWTSCERET);
     if (!decode) return response(res, 404, false, "Server Error Plz Try again");
     req.user = await Users.findById(decode._id);
-    if (!req?.user) return response(res, 401, false, "Does not Find The User");
+    if (!req?.user || !req.user?.isDelete)
+      return response(res, 401, false, "Does not Find The User");
   } catch (error) {
     return response(res, 500, false, error.message);
   }

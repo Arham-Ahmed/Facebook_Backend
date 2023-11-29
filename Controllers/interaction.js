@@ -32,7 +32,17 @@ const Like = async (req, res) => {
       return res.status(200).json({
         sucuess: true,
         message: "Liked",
-        likerId: req.user?._id,
+        likerId: await UserModel.findById({ _id: req.user.id }).select([
+          "-role",
+          "-token",
+          "-posts",
+          "-todos",
+          "-followers",
+          "-following",
+          "-cover_photo",
+          "-email",
+          "-isDelete",
+        ]),
       });
     }
   } catch (error) {

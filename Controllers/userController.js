@@ -45,7 +45,7 @@ const createUser = async (req, res) => {
           false,
           "Some error occur on creating account"
         );
-
+      console.log(req);
       const Filemimetype = req?.files?.profile_photo[0].mimetype;
       if (!Filemimetype.includes("image/"))
         return response(
@@ -100,6 +100,7 @@ const createUser = async (req, res) => {
       const downloadUrl = await firebaseUploder(
         res,
         req,
+        req?.files?.profile_photo[0]?.length,
         "profile_photo",
         await imageCompressor(req?.files?.profile_photo[0]?.buffer)
       );
@@ -122,8 +123,7 @@ const loginUser = async (req, res) => {
     const user = await Users?.findOne({ email: email })?.select("+password");
 
     if (!user) return response(res, 401, false, "User doesn't exist");
-    if (user?.isDelete !== null)
-      return response(res, 400, false, "Can't Find User");
+    if (user?.isDelete) return response(res, 400, false, "Can't Find User");
 
     const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch) return response(res, 401, false, "Invalid Credential");
@@ -236,17 +236,18 @@ const updateUser = async (req, res) => {
         false,
         "Invalid file format -- Please upload an image"
       );
-
-    if (req?.files?.profile_photo[0]?.length > 1) {
+    if (req?.files?.profile_photo?.length > 1) {
       return response(res, 400, false, `cant upload more than 1 image`);
     }
-
+    const compressedImage = await imageCompressor(
+      req?.files?.profile_photo[0]?.buffer
+    );
     const downloadUrl = await firebaseUploder(
       res,
       req,
-      req?.files?.profile_photo?.length,
+      req?.files?.profile_photo?.length - 1,
       "profile_photo",
-      await imageCompressor(req?.files?.profile_photo[0].buffer)
+      compressedImage
     );
     UpdatedUser?.profile_photo?.push(downloadUrl);
     await UpdatedUser?.save();

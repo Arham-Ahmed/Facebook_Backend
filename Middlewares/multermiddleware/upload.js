@@ -6,6 +6,8 @@ const {
   getDownloadURL,
   uploadBytesResumable,
   deleteObject,
+  listAll,
+  list,
 } = require("firebase/storage");
 const firebase = require("firebase/app");
 const { firebaseConfig } = require("../../firebase");
@@ -22,31 +24,33 @@ const firebaseUploder = async (res, req, index, folder, image) => {
     "."
   )[0];
 
-  const storageRef = ref(
-    storage,
-    `${folder}/${fileName + " " + " " + uuidv4()}`
-  );
+  const storageRef = ref(storage, `${folder}/${fileName + uuidv4()}`);
   const metadata = {
     contentType: "webp",
   };
   const uploadedFile = await uploadBytesResumable(storageRef, image, metadata);
 
-  if (!uploadedFile)
-    return response(
-      res,
-      500,
-      false,
-      "Error on uploading iamge on Firebase line 53"
-    );
+  // if (!uploadedFile)
+  //   return response(
+  //     res,
+  //     500,
+  //     false,
+  //     "Error on uploading iamge on Firebase line 53"
+  //   );
   const downloadUrl = await getDownloadURL(uploadedFile?.ref);
   return downloadUrl;
 };
 
-const firebaseImageDelete = async (folder, image, req) => {
-  const storageRef = ref(
-    storage,
-    `${folder}/${req?.file?.originalname + " " + " " + new Date()?.getTime()}`
-  );
-  return await deleteObject(deleteRef);
+const firebaseImageDelete = async (deleteImagPath, res) => {
+  try {
+    const deletRef = ref(storage, deleteImagPath);
+    const deleteImg = await deleteObject(deletRef);
+  } catch (error) {
+    return response(
+      res,
+      500,
+      `error on upload.js line no 49  : error : ${error.message} `
+    );
+  }
 };
-module.exports = { upload, firebaseUploder };
+module.exports = { upload, firebaseUploder, firebaseImageDelete };
