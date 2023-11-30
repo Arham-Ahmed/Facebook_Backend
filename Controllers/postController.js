@@ -27,9 +27,8 @@ const createPost = async (req, res) => {
     user?.posts?.push(post?._id);
     await user?.save();
 
-    if (!req?.files) {
-      await post?.save();
-    }
+    // if (!req?.files) {
+    // }
     if (req?.files?.imageUrl?.length > 0) {
       const imageArray = req?.files?.imageUrl?.map(async (img, index) => {
         const Filemimetype = img.mimetype;
@@ -50,6 +49,7 @@ const createPost = async (req, res) => {
       post.imageUrl.push(...allPromis);
       await post.save();
     }
+    await post?.save();
 
     return res.status(201).json({
       resStatus: res.status,
