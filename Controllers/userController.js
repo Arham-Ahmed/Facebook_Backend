@@ -7,6 +7,7 @@ const moment = require("moment");
 
 const {
   firebaseUploder,
+  firebaseImageDelete,
 } = require("../helper/firebaseUploader/firebaseUploader");
 // Initialize Firebase
 const Option = {
@@ -88,7 +89,7 @@ const createUser = async (req, res) => {
       return response(res, 201, true, "User created sucessfully", newUser);
     }
     if (!existsuser?.isDelete)
-      return response(res, 400, false, "User Already exist");
+      return response(res, 409, false, "User with this email already exist ");
   } catch (e) {
     return response(res, 500, false, e.message);
   }
@@ -172,12 +173,23 @@ const removeUser = async (req, res) => {
       });
     }
 
+    const refr = user?.profile_photo?.map(async (image, index) => {
+      const deleteImagPath = image
+        .split("/")
+        [image.split("/").length - 1].replaceAll("%", "")
+        .split("?")[0]
+        .replace("2F", "/");
+
+      await firebaseImageDelete(deleteImagPath, res);
+    });
+
     const deleteUser = await Users?.findByIdAndUpdate(
       { _id: req?.user?._id },
       {
         isDelete: moment().format("YYYY MMMM Do , h:mm:ss a"),
       }
     );
+
     if (deleteUser) {
       res.status(200)?.clearCookie("token")?.json({
         sucess: true,

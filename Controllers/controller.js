@@ -1,5 +1,6 @@
 const todosModel = require("../Models/Todo");
 const userModel = require("../Models/User");
+const { response } = require("../utils/response");
 
 const addTodo = async (req, res) => {
   try {
@@ -10,6 +11,7 @@ const addTodo = async (req, res) => {
     newTodo.owner = user?._id;
     await newTodo?.save();
     await user?.save();
+    return response(res, 201, "Data submitted");
     res.status(201)?.json({
       resStatus: res.status,
       message: "Data Submitied",

@@ -228,14 +228,11 @@ const removePost = async (req, res) => {
     });
     const Deletepost = await Post?.findByIdAndDelete({ _id: id });
 
-    res.status(200).json({
-      sucess: true,
-      message: "Post Deleted Sucessfully",
-    });
     const user = await User?.findById({ _id: req.user.id });
     const indexofPost = user?.posts?.indexOf(post._id);
     user?.posts?.splice(indexofPost, 1);
     await user?.save();
+    return response(res, 200, "Post deleted sucessfully");
   } catch (error) {
     return response(
       res,
