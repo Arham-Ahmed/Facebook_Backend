@@ -6,12 +6,11 @@ const {
   getDownloadURL,
   uploadBytesResumable,
   deleteObject,
-  listAll,
-  list,
 } = require("firebase/storage");
 const firebase = require("firebase/app");
 const { firebaseConfig } = require("../../firebase");
 const { response } = require("../../utils/response");
+const sharp = require("sharp");
 
 firebase.initializeApp(firebaseConfig);
 
@@ -19,16 +18,28 @@ const storage = getStorage();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-const firebaseUploder = async (res, req, index, folder, image) => {
-  const fileName = Object?.values(req?.files)[0][index]?.originalname?.split(
-    "."
-  )[0];
+//res, req, index,
+const firebaseUploder = async (folder, image) => {
+  // const imageBuffer = await sharp(image[0].input).toBuffer();
+  const imageBuffer = await image?.options?.input?.buffer;
+  console.log(
+    "🚀 ~ file: upload.js:24 ~ firebaseUploder ~ imageBuffer:",
+    image?.options?.input?.buffer
+  );
+  // const fileName = Object?.values(req?.files)[0][
+  //   req?.files[0]?.length - 1
+  // ]?.originalname?.split(".")[0];
+  const fileName = image[0]?.originalname?.split(".")[0];
 
   const storageRef = ref(storage, `${folder}/${fileName + uuidv4()}`);
   const metadata = {
-    contentType: "webp",
+    contentType: "png",
   };
-  const uploadedFile = await uploadBytesResumable(storageRef, image, metadata);
+  const uploadedFile = await uploadBytesResumable(
+    storageRef,
+    imageBuffer,
+    metadata
+  );
 
   // if (!uploadedFile)
   //   return response(

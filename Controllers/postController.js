@@ -42,13 +42,25 @@ const createPost = async (req, res) => {
             "Invalid file format -- Please upload an image"
           );
 
-        const CompressedImg = await imageCompressor(img);
+        const CompressedImg = await imageCompressor(img).catch((err) =>
+          response(
+            res,
+            500,
+            `error on postController line no 45 ${err.message}`
+          )
+        );
         const postdownloadUrl = await firebaseUploder(
           res,
           req,
           index,
           "/post_images",
           CompressedImg
+        ).catch((err) =>
+          response(
+            res,
+            500,
+            `error on postController line no 52 ${err.message}`
+          )
         );
         return postdownloadUrl;
       });
@@ -137,7 +149,9 @@ const removePost = async (req, res) => {
         .split("?")[0]
         .replace("2F", "/");
 
-      await firebaseImageDelete(deleteImagPath, res);
+      await firebaseImageDelete(deleteImagPath, res).catch((err) =>
+        response(res, 500, `error on postController line no 153 ${err.message}`)
+      );
 
       // await firebaseImageDelete(deleteImagPath);
     });
