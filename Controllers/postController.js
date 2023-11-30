@@ -22,7 +22,13 @@ const createPost = async (req, res) => {
       owner: req?.user?._id,
     };
     const post = new Post(newPost);
-    if (!post) return res.status(500).json({ message: "Some Error Occur" });
+    if (!post)
+      return response(
+        res,
+        500,
+        false,
+        "Some error occured on postcontroller line no 26"
+      );
     const user = await User?.findById(req?.user?._id);
     user?.posts?.push(post?._id);
     await user?.save();
@@ -51,13 +57,14 @@ const createPost = async (req, res) => {
     }
     await post?.save();
 
-    return res.status(201).json({
-      resStatus: res.status,
-      message: "Post Created SucessFully ",
-      postimageUrl: post.imageUrl,
-    });
+    return response(res, 201, "Post created sucessfully", post);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    return response(
+      res,
+      500,
+      false,
+      `Server error on postController line 190 ${e.message}`
+    );
   }
 };
 ////////////////////////////////// For getall Posts ////////////////////////////////
@@ -109,10 +116,6 @@ const getallPost = async (req, res) => {
             select: ["name", "profile_photo", "createdAt"],
           },
         ]);
-      console.log(
-        "🚀 ~ file: postController.js:93 ~ getallPost ~ posts:",
-        posts
-      );
     }
     if (email) {
       posts = await Post?.find({ email: { $regex: email, $option: i } })
@@ -156,17 +159,16 @@ const getallPost = async (req, res) => {
           select: ["name", "profile_photo", "createdAt"],
         },
       ]);
-    if (posts?.length === 0) return res.json({ message: "No Posts Available" });
-    return res.status(200).json({
-      sucess: true,
-      resStatus: res.status,
-      Posts: posts,
-    });
+    if (posts?.length === 0)
+      return response(res, 404, false, "No post available");
+    return response(res, 200, true, "All posts", posts);
   } catch (error) {
-    return res.status(500).json({
-      sucess: false,
-      message: error.message,
-    });
+    return response(
+      res,
+      500,
+      false,
+      `Server error on postController line 190 ${e.message}`
+    );
   }
 };
 ///////////////////////////// For getallPosts of User ////////////////////////////////
@@ -193,17 +195,16 @@ const getallUserPost = async (req, res) => {
           select: ["name", "profile_photo", "createdAt"],
         },
       ]);
-    if (posts?.length === 0) return res.json({ message: "No Posts Available" });
-    return res.status(200).json({
-      sucess: true,
-      resStatus: res.status,
-      Posts: posts,
-    });
+    if (posts?.length === 0)
+      return response(res, 404, false, "No post available");
+    return response(res, 200, true, "All posts of User are", posts);
   } catch (error) {
-    return res.status(500).json({
-      sucess: false,
-      message: error.message,
-    });
+    return response(
+      res,
+      500,
+      false,
+      `Server error on postController line 190 ${e.message}`
+    );
   }
 };
 
@@ -212,8 +213,7 @@ const removePost = async (req, res) => {
   try {
     const { id } = req?.params;
     const post = await Post?.findOne({ _id: id });
-    if (!post)
-      return res.status(404).json({ sucess: false, message: "Post are Empty" });
+    if (!post) return response(res, 404, false, "No Post available");
     if (post.owner.toHexString() !== req?.user?.id) {
       return response(res, 400, false, "Your are not login with this account");
     }
@@ -226,12 +226,11 @@ const removePost = async (req, res) => {
 
       await firebaseImageDelete(deleteImagPath, res);
     });
-    const Deletepost = await Post?.findByIdAndDelete({ _id: id });
-
     const user = await User?.findById({ _id: req.user.id });
     const indexofPost = user?.posts?.indexOf(post._id);
     user?.posts?.splice(indexofPost, 1);
     await user?.save();
+    const Deletepost = await Post?.findByIdAndDelete({ _id: id });
     return response(res, 200, "Post deleted sucessfully");
   } catch (error) {
     return response(

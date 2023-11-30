@@ -39,12 +39,6 @@ const firebaseImageDelete = async (deleteImagPath, res) => {
   try {
     const deletRef = ref(storage, deleteImagPath);
     const deleteImg = await deleteObject(deletRef);
-  } catch (error) {
-    return response(
-      res,
-      500,
-      `error on upload.js line no 49  : error : ${error.message} `
-    );
-  }
+  } catch (error) {}
 };
 module.exports = { firebaseUploder, firebaseImageDelete };

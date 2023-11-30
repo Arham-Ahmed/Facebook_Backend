@@ -12,12 +12,13 @@ const addTodo = async (req, res) => {
     await newTodo?.save();
     await user?.save();
     return response(res, 201, "Data submitted");
-    res.status(201)?.json({
-      resStatus: res.status,
-      message: "Data Submitied",
-    });
   } catch (e) {
-    res.status(500).send({ error: e?.message });
+    return response(
+      res,
+      500,
+      false,
+      `Server error on controller line 20 ${e.message}`
+    );
   }
 };
 const removeTodo = async (req, res) => {
@@ -28,14 +29,14 @@ const removeTodo = async (req, res) => {
     const todoIndex = user?.todos?.indexOf(todo_iD);
     user?.todos?.splice(todoIndex, 1);
     await user?.save();
-    res.status(200)?.json({
-      resStatus: res?.status,
-      message: "Deleted SucessFully",
-    });
+    return response(res, 200, true, "Deleted sucessfully");
   } catch (e) {
-    res.status(500).json({
-      message: e?.message,
-    });
+    return response(
+      res,
+      500,
+      false,
+      `Server error on userController line 41 ${e.message}`
+    );
   }
 };
 const updateTodo = async (req, res) => {
@@ -47,15 +48,20 @@ const updateTodo = async (req, res) => {
       { todo: todo, done: done }
     );
     if (!updateTodo)
-      return res.status(500)?.json({
-        success: false,
-        message: "Internal server error",
-      });
-    res.status(200).json({ success: true, message: "Done SucessFully" });
+      return response(
+        res,
+        500,
+        false,
+        `Internal server error on controller line no 51`
+      );
+    return response(res, 200, true, "Todo update sucessfully");
   } catch (e) {
-    res.status(500)?.json({
-      message: e.message,
-    });
+    return response(
+      res,
+      500,
+      false,
+      `Server error on userController line 64 ${e.message}`
+    );
   }
 };
 const getallTodo = async (req, res) => {
@@ -65,28 +71,29 @@ const getallTodo = async (req, res) => {
       return res
         ?.status(404)
         ?.json({ sucess: false, message: "userModel Not Found" });
-    TodosData = user?.todos;
-    res.status(200).json({
-      success: true,
-      Todos: TodosData,
-    });
+    const TodosData = user?.todos;
+    return response(res, 200, true, "All todos are", TodosData);
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
+    return response(
+      res,
+      500,
+      false,
+      `Server error on userController line 85 ${e.message}`
+    );
   }
 };
 const searchTodo = async (req, res) => {
   try {
     const todo = req?.body?.todo;
-    res.status(200).json({
-      resStatus: res?.status,
-      Todos: await todosModel.find({ todo: todo }),
-    });
+    const todos = await todosModel.find({ todo: todo });
+    return response(res, 200, true, "your todos", todos);
   } catch (error) {
-    res.status(500).json({
-      message: e.message,
-    });
+    return response(
+      res,
+      500,
+      false,
+      `Server error on userController line 101 ${e.message}`
+    );
   }
 };
 

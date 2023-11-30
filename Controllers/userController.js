@@ -101,7 +101,7 @@ const loginUser = async (req, res) => {
 
     const user = await Users?.findOne({ email: email })?.select("+password");
 
-    if (!user) return response(res, 401, false, "User doesn't exist");
+    if (!user) return response(res, 401, false, "Invalid Credential");
     if (user?.isDelete) return response(res, 400, false, "Can't Find User");
 
     const isMatch = await bcryptjs?.compare(password, user?.password);
@@ -143,10 +143,8 @@ const LogoutUser = async (req, res) => {
     const { token } = req?.cookies;
     if (!token)
       return response(res, 401, false, "Unable To Logout Login First");
-    return res.clearCookie("token").json({
-      sucess: true,
-      message: "Logout SucessFully",
-    });
+    await res.clearCookie("token");
+    return response(res, 200, true, "Logout sucessfully");
   } catch (error) {
     return response(res, 500, false, error?.message);
   }
@@ -160,17 +158,11 @@ const removeUser = async (req, res) => {
       "+isDelete",
     ]);
     if (!user) {
-      res.status(404).json({
-        sucess: false,
-        message: "User Dosent Exists",
-      });
+      return response(res, 404, false, "Invalid Credential");
     }
     const isMatch = bcryptjs?.compare(password, user?.password);
     if (!isMatch) {
-      res.status(404).json({
-        sucess: false,
-        message: "Invalid Credential",
-      });
+      return response(res, 404, false, "Invalid Credential");
     }
 
     const refr = user?.profile_photo?.map(async (image, index) => {
@@ -181,6 +173,7 @@ const removeUser = async (req, res) => {
         .replace("2F", "/");
 
       await firebaseImageDelete(deleteImagPath, res);
+      console.log("1");
     });
 
     const deleteUser = await Users?.findByIdAndUpdate(
@@ -191,13 +184,16 @@ const removeUser = async (req, res) => {
     );
 
     if (deleteUser) {
-      res.status(200)?.clearCookie("token")?.json({
-        sucess: true,
-        message: "Deleted SucessFully",
-      });
+      await res?.clearCookie("token");
+      return response(res, 200, true, "Deleted sucessfully");
     }
   } catch (e) {
-    return response(res, 500, false, e.message);
+    return response(
+      res,
+      500,
+      false,
+      `Server error on userController line 190 ${e.message}`
+    );
   }
 };
 ///////////////////////////////////////////// For Updating Users /////////////////////////////////////
@@ -218,8 +214,6 @@ const updateUser = async (req, res) => {
 
     if (!UpdatedUser) return response(res, 500, false, "Some Error Occured");
 
-    // const mimetype = req?.files?.profile_photo[0][];
-    // const Filemimetype = Object?.values(req?.files)[0][0].mimetype;
     if (req.files.profile_photo) {
       const Filemimetype = req?.files?.profile_photo[0].mimetype;
       if (!Filemimetype.includes("image/"))
@@ -279,15 +273,9 @@ const userCall = async (req, res) => {
     const user = await Users?.findById({ _id: user_id })
       .select(["-token", "-role", "-password"])
       .populate(["todos", "posts"]);
-    return res.status(200).json({
-      success: true,
-      User: user,
-    });
+    return response(res, 200, true, "AllUsers are", user);
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
+    return response(res, 500, false, error?.message);
   }
 };
 
