@@ -2,7 +2,7 @@ const sharp = require("sharp");
 
 const imageCompressor = async (req) => {
   const convertedimage = sharp(req?.buffer)
-    .png({
+    .webp({
       quality: 20,
       compressionLevel: 9,
     })

@@ -24,7 +24,7 @@ postRouter
   .get("/user-post", getallUserPost)
   .post(
     "/create-post",
-    upload.fields([
+    upload().fields([
       {
         name: "imageUrl",
         maxCount: 5,

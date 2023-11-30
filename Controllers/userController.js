@@ -5,8 +5,9 @@ const tokenModel = require("../Models/Token");
 const { response } = require("../utils/response");
 const moment = require("moment");
 
-const { firebaseUploder } = require("../Middlewares/multermiddleware/upload");
-const { imageCompressor } = require("../utils/imageCompressor/imageCompressor");
+const {
+  firebaseUploder,
+} = require("../helper/firebaseUploader/firebaseUploader");
 // Initialize Firebase
 const Option = {
   maxAge: 90 * 24 * 60 * 60 * 1000,
@@ -33,7 +34,6 @@ const createUser = async (req, res) => {
       email: req?.body?.email,
       password: req?.body?.password,
     };
-    // const img = req?.files?.profile_photo[0]?.buffer; //  Confusion on using this is right
     const existsuser = await Users?.findOne({ email: user?.email });
     if (!existsuser) {
       const newUser = new Users(user);

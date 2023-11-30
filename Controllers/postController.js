@@ -1,7 +1,7 @@
 const {
   firebaseUploder,
   firebaseImageDelete,
-} = require("../Middlewares/multermiddleware/upload");
+} = require("../helper/firebaseUploader/firebaseUploader");
 const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
@@ -62,34 +62,108 @@ const createPost = async (req, res) => {
 };
 ////////////////////////////////// For getall Posts ////////////////////////////////
 const getallPost = async (req, res) => {
-  const { id, name, email } = req?.body;
+  let posts;
   try {
-    const posts = await Post?.find({})
-      ?.sort()
-      .populate(["owner", "likes", "comments"]);
+    const { id, name, email } = req?.query;
+
     if (id) {
-      const posts = await Post?.find({})
+      posts = await Post?.find({ _id: id })
         ?.sort()
-        .populate(["owner", "likes", "comments"]);
+        .populate([
+          {
+            path: "owner",
+            select: ["name", "profile_photo"],
+          },
+          {
+            path: "comments",
+            populate: {
+              path: "owner",
+              model: "User",
+              select: ["name", "profile_photo", "createdAt"],
+            },
+          },
+          {
+            path: "likes",
+            select: ["name", "profile_photo", "createdAt"],
+          },
+        ]);
     }
     if (name) {
-      const posts = await Post?.find({})
+      posts = await Post?.find({ name: { $regex: name, $options: "i" } })
         ?.sort()
-        .populate(["owner", "likes", "comments"]);
+        .populate([
+          {
+            path: "owner",
+            select: ["name", "profile_photo"],
+          },
+          {
+            path: "comments",
+            populate: {
+              path: "owner",
+              model: "User",
+              select: ["name", "profile_photo", "createdAt"],
+            },
+          },
+          {
+            path: "likes",
+            select: ["name", "profile_photo", "createdAt"],
+          },
+        ]);
+      console.log(
+        "🚀 ~ file: postController.js:93 ~ getallPost ~ posts:",
+        posts
+      );
     }
     if (email) {
-      const posts = await Post?.find({})
+      posts = await Post?.find({ email: { $regex: email, $option: i } })
         ?.sort()
-        .populate(["owner", "likes", "comments"]);
+        .populate([
+          {
+            path: "owner",
+            select: ["name", "profile_photo"],
+          },
+          {
+            path: "comments",
+            populate: {
+              path: "owner",
+              model: "User",
+              select: ["name", "profile_photo", "createdAt"],
+            },
+          },
+          {
+            path: "likes",
+            select: ["name", "profile_photo", "createdAt"],
+          },
+        ]);
     }
+    posts = await Post?.find({})
+      ?.sort()
+      .populate([
+        {
+          path: "owner",
+          select: ["name", "profile_photo"],
+        },
+        {
+          path: "comments",
+          populate: {
+            path: "owner",
+            model: "User",
+            select: ["name", "profile_photo", "createdAt"],
+          },
+        },
+        {
+          path: "likes",
+          select: ["name", "profile_photo", "createdAt"],
+        },
+      ]);
     if (posts?.length === 0) return res.json({ message: "No Posts Available" });
-    res.status(200).json({
+    return res.status(200).json({
       sucess: true,
       resStatus: res.status,
       Posts: posts,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       sucess: false,
       message: error.message,
     });
@@ -101,7 +175,24 @@ const getallUserPost = async (req, res) => {
   try {
     const posts = await Post?.find({ owner: req.user?._id })
       ?.sort("-1")
-      .populate(["owner", "likes", "comments"]);
+      .populate([
+        {
+          path: "owner",
+          select: ["name", "profile_photo"],
+        },
+        {
+          path: "comments",
+          populate: {
+            path: "owner",
+            model: "User",
+            select: ["name", "profile_photo", "createdAt"],
+          },
+        },
+        {
+          path: "likes",
+          select: ["name", "profile_photo", "createdAt"],
+        },
+      ]);
     if (posts?.length === 0) return res.json({ message: "No Posts Available" });
     return res.status(200).json({
       sucess: true,

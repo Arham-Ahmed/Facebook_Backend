@@ -23,7 +23,7 @@ userRouter
   .post(
     "/register",
     [
-      upload.fields([
+      upload().fields([
         {
           name: "profile_photo",
           maxCount: 1,
@@ -41,7 +41,7 @@ userRouter
   .put(
     "/update-user",
     isauthenticated,
-    upload.fields([
+    upload().fields([
       {
         name: "profile_photo",
         maxCount: 1,
