@@ -6,7 +6,6 @@ const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
 const { response } = require("../utils/response");
-const { imageCompressor } = require("../utils/imageCompressor/imageCompressor");
 
 ////////////////////////////////// For Creating Post /////////////////////////////
 const createPost = async (req, res) => {
@@ -42,26 +41,9 @@ const createPost = async (req, res) => {
             "Invalid file format -- Please upload an image"
           );
 
-        const CompressedImg = await imageCompressor(img).catch((err) =>
-          response(
-            res,
-            500,
-            `error on postController line no 45 ${err.message}`
-          )
-        );
-        const postdownloadUrl = await firebaseUploder(
-          res,
-          req,
-          index,
-          "/post_images",
-          CompressedImg
-        ).catch((err) =>
-          response(
-            res,
-            500,
-            `error on postController line no 52 ${err.message}`
-          )
-        );
+        const image = req?.files?.imageUrl[index];
+
+        const postdownloadUrl = await firebaseUploder("/post_images", image);
         return postdownloadUrl;
       });
       const allPromis = await Promise.all(imageArray);
@@ -78,7 +60,7 @@ const createPost = async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 };
-// For getall Posts
+////////////////////////////////// For getall Posts ////////////////////////////////
 const getallPost = async (req, res) => {
   const { id, name, email } = req?.body;
   try {
@@ -113,6 +95,8 @@ const getallPost = async (req, res) => {
     });
   }
 };
+///////////////////////////// For getallPosts of User ////////////////////////////////
+
 const getallUserPost = async (req, res) => {
   try {
     const posts = await Post?.find({ owner: req.user?._id })
@@ -149,11 +133,7 @@ const removePost = async (req, res) => {
         .split("?")[0]
         .replace("2F", "/");
 
-      await firebaseImageDelete(deleteImagPath, res).catch((err) =>
-        response(res, 500, `error on postController line no 153 ${err.message}`)
-      );
-
-      // await firebaseImageDelete(deleteImagPath);
+      await firebaseImageDelete(deleteImagPath, res);
     });
     const Deletepost = await Post?.findByIdAndDelete({ _id: id });
 
@@ -161,13 +141,6 @@ const removePost = async (req, res) => {
       sucess: true,
       message: "Post Deleted Sucessfully",
     });
-    // post.comments;
-    // if (post?.comments?.length > 0) {
-    //   for (let index = 0; index < post?.comments?.length; index++) {
-    //     Comment?.findByIdAndDelete({ _id });
-    //   }
-    // }
-
     const user = await User?.findById({ _id: req.user.id });
     const indexofPost = user?.posts?.indexOf(post._id);
     user?.posts?.splice(indexofPost, 1);

@@ -44,33 +44,26 @@ const createUser = async (req, res) => {
           false,
           "Some error occur on creating account"
         );
-      const Filemimetype = req?.files?.profile_photo[0].mimetype;
-      if (!Filemimetype.includes("image/"))
-        return response(
-          res,
-          500,
-          false,
-          "Invalid file format -- Please upload an image"
-        );
+      if (req?.files?.profile_photo?.length) {
+        const Filemimetype = req?.files?.profile_photo[0].mimetype;
+        if (!Filemimetype.includes("image/"))
+          return response(
+            res,
+            500,
+            false,
+            "Invalid file format -- Please upload an image"
+          );
 
-      // firebase Image Uploading ...
-      if (req?.files?.profile_photo[0]?.length > 1) {
-        return response(res, 400, false, "You can Upload 1 image at a time");
+        // firebase Image Uploading ...
+        if (req?.files?.profile_photo[0]?.length > 0) {
+          return response(res, 400, false, "You can Upload 1 image at a time");
+        }
+        const image = req?.files?.profile_photo[0];
+        const downloadUrl = await firebaseUploder("profile_photo", image);
+        newUser?.profile_photo.push(downloadUrl);
+        await newUser.save();
       }
-      const compressedImage = await imageCompressor(
-        req?.files?.profile_photo[0]
-      );
-      const downloadUrl = await firebaseUploder(
-        // res,
-        // req,
-        // req?.files?.profile_photo[0]?.length,
-        "profile_photo",
-        compressedImage
-      );
-      newUser?.profile_photo.push(downloadUrl);
       await newUser.save();
-
-      // firebase Image Uploading end...
       return response(res, 201, true, "User created sucessfully", newUser);
     }
 
@@ -84,18 +77,12 @@ const createUser = async (req, res) => {
           false,
           "Some error occur on creating account"
         );
-
-      const compressedImage = await imageCompressor(
-        req?.files?.profile_photo[0]
-      );
-      const downloadUrl = await firebaseUploder(
-        // res,
-        // req,
-        // req?.files?.profile_photo[0]?.length,
-        "profile_photo",
-        await compressedImage
-      );
-      newUser.profile_photo.push(downloadUrl);
+      if (req?.files?.profile_photo?.length > 0) {
+        const image = req?.files?.profile_photo[0];
+        const downloadUrl = await firebaseUploder("profile_photo", image);
+        newUser.profile_photo.push(downloadUrl);
+        await newUser.save();
+      }
       await newUser.save();
 
       return response(res, 201, true, "User created sucessfully", newUser);
@@ -221,38 +208,33 @@ const updateUser = async (req, res) => {
 
     // const mimetype = req?.files?.profile_photo[0][];
     // const Filemimetype = Object?.values(req?.files)[0][0].mimetype;
-    const Filemimetype = req?.files?.profile_photo[0].mimetype;
-
-    if (!Filemimetype.includes("image/"))
-      return response(
-        res,
-        500,
-        false,
-        "Invalid file format -- Please upload an image"
-      );
-    if (req?.files?.profile_photo?.length > 1) {
-      return response(res, 400, false, `cant upload more than 1 image`);
+    if (req.files.profile_photo) {
+      const Filemimetype = req?.files?.profile_photo[0].mimetype;
+      if (!Filemimetype.includes("image/"))
+        return response(
+          res,
+          500,
+          false,
+          "Invalid file format -- Please upload an image"
+        );
+      if (req?.files?.profile_photo?.length > 1) {
+        return response(res, 400, false, `cant upload more than 1 image`);
+      }
+      const image = req?.files?.profile_photo[0];
+      const downloadUrl = await firebaseUploder("profile_photo", image);
+      UpdatedUser?.profile_photo?.push(downloadUrl);
+      await UpdatedUser?.save();
     }
-    const compressedImage = await imageCompressor(req?.files?.profile_photo[0]);
-    const downloadUrl = await firebaseUploder(
-      res,
-      req,
-      req?.files?.profile_photo?.length - 1,
-      "profile_photo",
-      compressedImage
-    );
-    UpdatedUser?.profile_photo?.push(downloadUrl);
-    await UpdatedUser?.save();
 
     // await UpdatedUser?.save();
 
     return response(res, 200, true, "Updated sucessfully", UpdatedUser);
   } catch (e) {
-    response(
+    return response(
       res,
       500,
       false,
-      `error on userController line number 234${e?.message}`
+      `Error on userController line number 234 ${e?.message}`
     );
   }
 };
