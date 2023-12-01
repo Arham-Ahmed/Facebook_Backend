@@ -6,7 +6,7 @@ const addTodo = async (req, res) => {
   try {
     const todo = req?.body;
     const newTodo = new todosModel(todo);
-    const user = await userModel?.findOne(req?.user?._id);
+    const user = await userModel?.findOne(global.user?._id);
     user?.todos?.push(newTodo);
     newTodo.owner = user?._id;
     await newTodo?.save();
@@ -25,7 +25,7 @@ const removeTodo = async (req, res) => {
   try {
     const todo_iD = req?.params?.id;
     await todosModel.findOneAndDelete({ _id: todo_iD });
-    const user = await userModel?.findById(req?.user?._id);
+    const user = await userModel?.findById(global.user?._id);
     const todoIndex = user?.todos?.indexOf(todo_iD);
     user?.todos?.splice(todoIndex, 1);
     await user?.save();
@@ -66,7 +66,7 @@ const updateTodo = async (req, res) => {
 };
 const getallTodo = async (req, res) => {
   try {
-    const user = await userModel?.findOne(req?.user?._id)?.populate("todos");
+    const user = await userModel?.findOne(global.user?._id)?.populate("todos");
     if (!user)
       return res
         ?.status(404)

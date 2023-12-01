@@ -7,8 +7,7 @@ const {
   deleteObject,
 } = require("firebase/storage");
 const firebase = require("firebase/app");
-const { firebaseConfig } = require("../../firebase");
-const { response } = require("../../utils/response");
+const { firebaseConfig } = require("../../Config/firebaseConfig/firebase");
 const {
   imageCompressor,
 } = require("../../helper/imageCompressor/imageCompressor");

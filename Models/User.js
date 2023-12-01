@@ -93,23 +93,4 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
-// userSchema.methods.joiValidate = function () {
-//   // pull out just the properties that has to be checked (generated fields from mongoose we ignore)
-//   const { username, email, password } = this;
-//   const user = { username, email, password };
-//   const Joi = require("joi");
-//   const schema = Joi.object().keys({
-//     username: Joi.string().min(6).max(24).required(),
-//     email: Joi.string().email().required(),
-//     password: Joi.string()
-//       .min(8)
-//       .max(30)
-//       .regex(/[a-zA-Z0-9]{3,30}/)
-//       .required(),
-//     _id: Joi.string(),
-//   });
-
-//   return Joi.validate(user, schema, { abortEarly: false });
-// };
-
 module.exports = mongoose.model("User", UserSchema);

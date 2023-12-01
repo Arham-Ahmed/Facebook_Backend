@@ -17,22 +17,22 @@ const Like = async (req, res) => {
         sucuess: false,
         message: "No UserFound",
       });
-    if (currPost?.likes?.includes(req.user?._id)) {
-      const postIndex = currPost?.likes?.indexOf(req.user?._id);
+    if (currPost?.likes?.includes(global.user?._id)) {
+      const postIndex = currPost?.likes?.indexOf(global.user?._id);
       currPost?.likes?.splice(postIndex, 1);
       await currPost?.save();
       return res.status(200).json({
         sucuess: true,
         message: "UnLiked",
-        likerId: req.user?._id,
+        likerId: global.user?._id,
       });
     } else {
-      currPost?.likes?.push(req.user?._id);
+      currPost?.likes?.push(global.user?._id);
       await currPost?.save();
       return res.status(200).json({
         sucuess: true,
         message: "Liked",
-        likerId: await UserModel.findById({ _id: req.user.id }).select([
+        likerId: await UserModel.findById({ _id: global.user.id }).select([
           "-role",
           "-token",
           "-posts",
@@ -68,7 +68,7 @@ const CreateComment = async (req, res) => {
         message: "No UserFound",
       });
     const newComment = new Comment({
-      owner: req.user?._id,
+      owner: global.user?._id,
       postid: currPost?._id,
       comment: comment,
     });
@@ -144,7 +144,7 @@ const DeleteComment = async (req, res) => {
 // const Authreply = async (req, res) => {
 //   try {
 //     const replyComment = req?.params?.id;
-//     const userwhoReply = req.user?._id;
+//     const userwhoReply = global.user?._id;
 
 //     if (!replyComment || !userwhoReply)
 //       return res.status(400).json({

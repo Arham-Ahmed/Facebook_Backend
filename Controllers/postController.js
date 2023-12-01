@@ -19,7 +19,7 @@ const createPost = async (req, res) => {
       );
     const newPost = {
       caption: req?.body?.caption,
-      owner: req?.user?._id,
+      owner: global.user?._id,
     };
     const post = new Post(newPost);
     if (!post)
@@ -29,7 +29,7 @@ const createPost = async (req, res) => {
         false,
         "Some error occured on postcontroller line no 26"
       );
-    const user = await User?.findById(req?.user?._id);
+    const user = await User?.findById(global.user?._id);
     user?.posts?.push(post?._id);
     await user?.save();
 
@@ -175,7 +175,7 @@ const getallPost = async (req, res) => {
 
 const getallUserPost = async (req, res) => {
   try {
-    const posts = await Post?.find({ owner: req.user?._id })
+    const posts = await Post?.find({ owner: global.user?._id })
       ?.sort("-1")
       .populate([
         {
@@ -214,7 +214,7 @@ const removePost = async (req, res) => {
     const { id } = req?.params;
     const post = await Post?.findOne({ _id: id });
     if (!post) return response(res, 404, false, "No Post available");
-    if (post.owner.toHexString() !== req?.user?.id) {
+    if (post.owner.toHexString() !== global.user?.id) {
       return response(res, 400, false, "Your are not login with this account");
     }
     const refr = post?.imageUrl?.map(async (image, index) => {
@@ -226,7 +226,7 @@ const removePost = async (req, res) => {
 
       await firebaseImageDelete(deleteImagPath, res);
     });
-    const user = await User?.findById({ _id: req.user.id });
+    const user = await User?.findById({ _id: global.user.id });
     const indexofPost = user?.posts?.indexOf(post._id);
     user?.posts?.splice(indexofPost, 1);
     await user?.save();

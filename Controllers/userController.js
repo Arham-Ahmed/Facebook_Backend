@@ -120,30 +120,48 @@ const loginUser = async (req, res) => {
     await newToken?.save();
     user.token?.push(newToken?._id);
     await user?.save();
-
-    res
-      .status(200)
-      ?.cookie("token", token, Option)
-      ?.json({
-        sucess: true,
-        message: "Loggin SucessFully",
-        user: await Users?.findById({ _id: user?.id })?.select([
-          "-password",
-          "-role",
-          "-token",
-        ]),
-        token,
-      });
+    // res
+    //   .status(200)
+    //   ?.cookie("token", token, Option)
+    //   ?.json({
+    //     sucess: true,
+    //     message: "Loggin SucessFully",
+    //     user: await Users?.findById({ _id: user?.id })?.select([
+    //       "-password",
+    //       "-role",
+    //       "-token",
+    //     ]),
+    //     token,
+    //   });
+    // res
+    //   .status(200)
+    //   ?.cookie("token", token, Option)
+    //   ?.json({
+    //     sucess: true,
+    //     message: "Loggin SucessFully",
+    //     user: await Users?.findById({ _id: user?.id })?.select([
+    //       "-password",
+    //       "-role",
+    //       "-token",
+    //     ]),
+    //     token,
+    //   });
+    return response(res, 200, true, "Login sucessfully", {
+      user: user,
+      token: token,
+    });
   } catch (e) {
     return response(res, 500, false, e.message);
   }
 };
+///////////////////////////////////////////// For Logout Users /////////////////////////////////////
+
 const LogoutUser = async (req, res) => {
   try {
     const { token } = req?.cookies;
     if (!token)
       return response(res, 401, false, "Unable To Logout Login First");
-    await res.clearCookie("token");
+    // await res.clearCookie("token");
     return response(res, 200, true, "Logout sucessfully");
   } catch (error) {
     return response(res, 500, false, error?.message);
@@ -178,7 +196,7 @@ const removeUser = async (req, res) => {
     await user.save();
 
     const deleteUser = await Users?.findByIdAndUpdate(
-      { _id: req?.user?._id },
+      { _id: global.user?._id },
       {
         isDelete: moment().format("YYYY MMMM Do , h:mm:ss a"),
       }
@@ -209,7 +227,7 @@ const updateUser = async (req, res) => {
       );
     const { email, name } = req?.body;
     const UpdatedUser = await Users?.findOneAndUpdate(
-      { _id: req?.user?._id },
+      { _id: global.user?._id },
       { name: name, email: email }
     );
 
@@ -270,11 +288,14 @@ const getallUsers = async (req, res) => {
 };
 const userCall = async (req, res) => {
   try {
-    const user_id = req?.user?._id;
+    const user_id = global.user?._id;
     const user = await Users?.findById({ _id: user_id })
       .select(["-token", "-role", "-password"])
       .populate(["todos", "posts"]);
-    return response(res, 200, true, "AllUsers are", user);
+    return response(res, 200, true, "user are", {
+      user: user,
+      token: global.token,
+    });
   } catch (error) {
     return response(res, 500, false, error?.message);
   }

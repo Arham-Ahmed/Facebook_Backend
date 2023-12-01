@@ -1,8 +1,8 @@
 require("dotenv").config();
 const express = require("express");
-const connectDb = require("./db/connect");
+const connectDb = require("./Config/dbConfig/connect");
 const cors = require("cors");
-const cookieParser = require("cookie-parser");
+// const cookieParser = require("cookie-parser");
 const path = require("path");
 // const multer = require("multer");
 
@@ -34,7 +34,7 @@ app.use(
   })
 );
 
-app.use(cookieParser());
+// app.use(cookieParser());
 // const limiter = rateLimit({
 //   windowMs: 60 * 1000, // 1 minutes
 //   limit: 400, //Limit
