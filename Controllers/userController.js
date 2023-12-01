@@ -173,8 +173,9 @@ const removeUser = async (req, res) => {
         .replace("2F", "/");
 
       await firebaseImageDelete(deleteImagPath, res);
-      console.log("1");
     });
+    user.profile_photo = [];
+    await user.save();
 
     const deleteUser = await Users?.findByIdAndUpdate(
       { _id: req?.user?._id },

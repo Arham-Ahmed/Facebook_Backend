@@ -21,7 +21,7 @@ const firebaseUploder = async (folder, image) => {
   try {
     const imageBuffer = await imageCompressor(image);
     const fileName = image?.originalname?.split(".")[0];
-    const storageRef = ref(storage, `${folder}/${fileName + uuidv4()}`);
+    const storageRef = ref(storage, `${folder}/${fileName + "2F" + uuidv4()}`);
     const metadata = {
       contentType: "webp",
     };
