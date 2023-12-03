@@ -29,8 +29,7 @@ const firebaseUploder = async (folder, image) => {
       imageBuffer,
       metadata
     );
-    const downloadUrl = await getDownloadURL(uploadedFile?.ref);
-    return downloadUrl;
+    return await getDownloadURL(uploadedFile?.ref);
   } catch (error) {}
 };
 

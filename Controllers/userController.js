@@ -158,10 +158,14 @@ const loginUser = async (req, res) => {
 
 const LogoutUser = async (req, res) => {
   try {
-    const { token } = req?.cookies;
+    const authorization = req?.headers?.authorization;
+    if (!authorization) return response(res, 401, false, "Unauthorized");
+    const token = authorization.split(" ")[1];
     if (!token)
       return response(res, 401, false, "Unable To Logout Login First");
-    // await res.clearCookie("token");
+    jwt?.sign({ _id: user?._id }, process?.env?.JWTSCERET, {
+      expiresIn: "1s",
+    });
     return response(res, 200, true, "Logout sucessfully");
   } catch (error) {
     return response(res, 500, false, error?.message);
