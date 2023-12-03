@@ -144,7 +144,7 @@ const getallPost = async (req, res) => {
       .populate([
         {
           path: "owner",
-          select: ["name", "profile_photo"],
+          select: ["name", "profile_photo", "isDelete"],
         },
         {
           path: "comments",
@@ -161,13 +161,19 @@ const getallPost = async (req, res) => {
       ]);
     if (posts?.length === 0)
       return response(res, 404, false, "No post available");
-    return response(res, 200, true, "All posts", posts);
+    return response(
+      res,
+      200,
+      true,
+      "All posts",
+      posts.filter((post) => post?.owner?.isDelete === null)
+    );
   } catch (error) {
     return response(
       res,
       500,
       false,
-      `Server error on postController line 190 ${e.message}`
+      `Server error on postController line 170 ${error.message}`
     );
   }
 };
@@ -203,7 +209,7 @@ const getallUserPost = async (req, res) => {
       res,
       500,
       false,
-      `Server error on postController line 190 ${e.message}`
+      `Server error on postController line 190 ${error.message}`
     );
   }
 };
