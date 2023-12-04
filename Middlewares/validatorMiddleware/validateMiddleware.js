@@ -29,10 +29,10 @@ const validateMiddleware = (req, res, next) => {
           .optional(),
       })
       .unknown(true);
-    const { error } = schema.validate(req?.body);
+    const { error } = schema.validate(req?.body, { abortEarly: false });
     if (error) return response(res, 400, false, error?.details);
   } catch (error) {
-    return response(res, 500, false, error.message);
+    return response(res, 500, false, error?.message);
   }
   next();
 };

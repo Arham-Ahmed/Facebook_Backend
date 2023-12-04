@@ -14,7 +14,9 @@ const { multi } = require("../Middlewares/multermiddleware/multiupload");
 const {
   validateMiddleware,
 } = require("../Middlewares/validatorMiddleware/validateMiddleware");
-
+const {
+  loginPagevalidator,
+} = require("../Middlewares/validatorMiddleware/loginPagevalidator");
 const userRouter = express.Router();
 
 userRouter
@@ -35,7 +37,7 @@ userRouter
     ],
     createUser
   )
-  .post("/login", [multi /*validateMiddleware*/], loginUser)
+  .post("/login", [multi, loginPagevalidator], loginUser)
   .get("/logout", multi, isauthenticated, LogoutUser)
   .delete("/delete", multi, isauthenticated, removeUser)
   .put(
