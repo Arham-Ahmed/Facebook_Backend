@@ -163,9 +163,6 @@ const LogoutUser = async (req, res) => {
     const token = authorization.split(" ")[1];
     if (!token)
       return response(res, 401, false, "Unable To Logout Login First");
-    jwt?.sign({ _id: global.user?._id }, process?.env?.JWTSCERET, {
-      expiresIn: "1s",
-    });
     return response(res, 200, true, "Logout sucessfully");
   } catch (error) {
     return response(res, 500, false, error?.message);

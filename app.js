@@ -3,6 +3,9 @@ const express = require("express");
 const connectDb = require("./Config/dbConfig/connect");
 const cors = require("cors");
 // const cookieParser = require("cookie-parser");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+
 const path = require("path");
 // const multer = require("multer");
 
@@ -15,6 +18,19 @@ const { postRouter } = require("./Routers/postRouter");
 // middelware
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+  },
+});
+io.on("connection", (socket) => {
+  socket.emit("connection", "connected to server");
+
+  socket.on("disconnect", (message) => {
+    console.log("Client disconnected with id: ", message);
+  });
+});
 
 const PORT = process?.env?.PORT || 5000;
 app.use(express.json());
@@ -29,7 +45,6 @@ app.use(
       "http://192.168.0.71:3000",
       "http://192.168.0.130:3003",
       "http://192.168.0.217:3000",
-      "http://192.168.42.235:3000",
       "*",
     ],
     credentials: true,
@@ -83,7 +98,7 @@ app.use(express.static(path.join(__dirname, "public/Postimages")));
 
 const start = async (url) => {
   try {
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(
         "\x1b[39m",
         `Listening on port`,
