@@ -16,7 +16,7 @@ const isauthenticated = async (req, res, next) => {
         res,
         401,
         false,
-        "Unable to acess PLz Login First --- please send cookies "
+        "Unable to acess PLz Login First --- please send token "
       );
     }
     const decode = jwt?.verify(token, JWTSCERET);
