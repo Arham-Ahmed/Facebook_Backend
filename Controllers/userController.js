@@ -9,6 +9,7 @@ const {
   firebaseUploder,
   firebaseImageDelete,
 } = require("../helper/firebaseHelperFuncs/firebaseUploader");
+const imageMimetype = require("../helper/imageHelperFunc's/imageMimeType");
 // Initialize Firebase
 
 ///////////////////////////////////////////// For Creating Users /////////////////////////////////////
@@ -36,15 +37,8 @@ const createUser = async (req, res) => {
           "Some error occur on creating account"
         );
       if (req?.files?.profile_photo?.length) {
-        const Filemimetype = req?.files?.profile_photo[0].mimetype;
-        if (!Filemimetype.includes("image/"))
-          return response({
-            res: res,
-            statusCode: 500,
-            sucessBoolean: false,
-            message: "Invalid file format -- Please upload an image",
-          });
-
+        const img = req?.files?.profile_photo[0];
+        imageMimetype(img, res);
         // firebase Image Uploading ...
         if (req?.files?.profile_photo?.length > 1) {
           return response({
@@ -70,26 +64,6 @@ const createUser = async (req, res) => {
       });
     }
 
-    // if (existsuser?.isDelete) {
-    //   const userRplace = await Users?.findOneAndDelete({ email: user?.email });
-    //   const newUser = new Users(user);
-    //   if (!newUser)
-    //     return response(
-    //       res,
-    //       500,
-    //       false,
-    //       "Some error occur on creating account"
-    //     );
-    //   if (req?.files?.profile_photo?.length > 0) {
-    //     const image = req?.files?.profile_photo[0];
-    //     const downloadUrl = await firebaseUploder("profile_photo", image);
-    //     newUser.profile_photo.push(downloadUrl);
-    //     await newUser.save();
-    //   }
-    //   await newUser.save();
-
-    //   return response(res, 201, true, "User created sucessfully", newUser);
-    // }
     if (!existsuser?.isDelete)
       return response({
         res: res,
@@ -319,14 +293,9 @@ const updateUser = async (req, res) => {
       });
 
     if (req?.files?.profile_photo) {
-      const Filemimetype = req?.files?.profile_photo[0].mimetype;
-      if (!Filemimetype.includes("image/"))
-        return response({
-          res: res,
-          statusCode: 500,
-          sucessBoolean: false,
-          message: "Invalid file format -- Please upload an image",
-        });
+      const img = req?.files?.profile_photo[0];
+      imageMimetype(img, res);
+
       if (req?.files?.profile_photo?.length > 1) {
         return response({
           res: res,
@@ -352,7 +321,7 @@ const updateUser = async (req, res) => {
   } catch (e) {
     return response({
       res: res,
-      statusCode: 500,
+      statusCode: e.statusCode || 500,
       sucessBoolean: false,
       message: "Error",
       payload: e.message,

@@ -9,6 +9,7 @@ const {
 const imagePathMaker = require("../helper/imageHelperFunc's/imagePathMaker");
 // const Comment = require("../Models/Comment");
 const { response } = require("../utils/response");
+const imageMimetype = require("../helper/imageHelperFunc's/imageMimeType");
 
 ////////////////////////////////// For Creating Post /////////////////////////////
 const createPost = async (req, res) => {
@@ -31,15 +32,7 @@ const createPost = async (req, res) => {
 
     if (req?.files?.imageUrl?.length > 0) {
       const imageArray = req?.files?.imageUrl?.map(async (img, index) => {
-        const Filemimetype = img?.mimetype;
-        if (!Filemimetype.includes("image/"))
-          return response({
-            res: res,
-            statusCode: 500,
-            sucessBoolean: false,
-            message: "Invalid file format -- Please upload an image",
-          });
-
+        imageMimetype(img, res);
         const image = req?.files?.imageUrl[index];
 
         const postdownloadUrl = await firebaseUploder("/post_images", image);

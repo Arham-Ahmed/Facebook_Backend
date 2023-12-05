@@ -34,7 +34,13 @@ postRouter
           },
         ])(req, res, (err) => {
           if (err) {
-            return response(res, 500, false, "Multer Error", err);
+            return response({
+              res: res,
+              statusCode: 500,
+              sucessBoolean: false,
+              message: "Multer Error",
+              payload: err,
+            });
           } else {
             next();
           }

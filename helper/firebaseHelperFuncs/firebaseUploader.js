@@ -29,13 +29,9 @@ const firebaseUploder = async (folder, image) => {
     );
     return await getDownloadURL(uploadedFile?.ref);
   } catch (e) {
-    return response({
-      res: res,
-      statusCode: 500,
-      sucessBoolean: false,
-      message: "Error",
-      payload: e.message,
-    });
+    let err = new Error(e.message);
+    err.statusCode = 500;
+    throw err;
   }
 };
 

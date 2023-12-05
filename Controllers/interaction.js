@@ -133,24 +133,32 @@ const DeleteComment = async (req, res) => {
   try {
     const { id } = req?.params;
     if (!id)
-      return res.status(404).json({
-        sucess: false,
+      return response({
+        res: res,
+        statusCode: 422,
+        sucessBoolean: false,
         message: "Cannot Delete Some Issue with your request",
       });
+
     const comment = await Comment?.findById({ _id: id });
     if (!comment)
-      return res
-        .status(404)
-        .json({ sucess: false, message: "Comments are Empty" });
+      return response({
+        res: res,
+        statusCode: 404,
+        sucessBoolean: false,
+        message: "Comments are Empty",
+      });
     const postID = comment.postid.toHexString();
     const post = await Post?.findById({ _id: postID });
     const indexofComment = post?.comments?.indexOf(id);
     post?.comments?.splice(indexofComment, 1);
     await post?.save();
     await Comment?.findByIdAndDelete({ _id: id });
-    // await Comment?.save();
-    res.status(200).json({
-      sucess: true,
+
+    return response({
+      res: res,
+      statusCode: 200,
+      sucessBoolean: false,
       message: "Comment Deleted Sucessfully",
     });
   } catch (e) {
