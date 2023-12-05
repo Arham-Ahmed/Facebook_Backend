@@ -24,8 +24,13 @@ const io = new Server(httpServer, {
     origin: "*",
   },
 });
+let user = 1;
 io.on("connection", (socket) => {
-  socket.emit("connection", "connected to server");
+  // socket.emit("connection", socket.id, "connected to server");
+  // socket.emit("connection", user++, {
+  //   message: `total user ${user}`,
+  // });
+  socket.on("join", function (data) {});
 
   socket.on("disconnect", (message) => {
     console.log("Client disconnected with id: ", message);
@@ -44,7 +49,7 @@ app.use(
       "http://192.168.0.130:3000",
       "http://192.168.0.71:3000",
       "http://192.168.0.130:3003",
-      "http://192.168.0.217:3000",
+      "http://192.168.0.214:3000",
       "*",
     ],
     credentials: true,
@@ -52,6 +57,7 @@ app.use(
 );
 
 // app.use(cookieParser());
+
 // const limiter = rateLimit({
 //   windowMs: 60 * 1000, // 1 minutes
 //   limit: 400, //Limit
@@ -61,32 +67,10 @@ app.use(
 
 // app.use(limiter);
 
-// Socket Connection
-
-// const io = require("socket.io")(5001, () => {
-//   cors: {
-//     origin: [
-//       "http://localhost:3000",
-//       "http://192.168.0.228:3000",
-//       "http://192.168.0.130:3000",
-//       "http://192.168.0.71:3000",
-//       "*",
-//     ];
-//   }
-// });
-
-// io.on("connection", (socket) => {
-//   console.log("user Connected")
-//   socket.on("userAdd", (userId) => {
-//     socket.userId = userId;
-//   });
-//   io.emit("getUser", socket.userId);
-// });
-
 // Api Call
 
 app.get("/", (req, res) => {
-  res.send("Welcome to Todo app using Node js");
+  res.send("Welcome to Our Faceback app using MERN");
 });
 app.use("/todos", isauthenticated, router);
 app.use("/users", userRouter);
@@ -96,29 +80,29 @@ app.use(express.static(path.join(__dirname, "public/Postimages")));
 
 // Server Function
 
-const start = async (url) => {
-  try {
-    httpServer.listen(PORT, () => {
-      console.log(
-        "\x1b[39m",
-        `Listening on port`,
-        "\x1b[36m",
-        // "\x1b[1m",
-        // "\x1b[4m",
-        // "\x1b[5m",
-        "http://localhost:5000",
-        "\x1b[0m"
-      );
-    });
-    await connectDb(process.env.MONGODB_URI);
-    // console.log("Connected");
-    if (connectDb) {
-      console.log("\x1b[32m", "Connected");
-    } else {
-      console.log("\x1b[31m", "not Connected", "\x1b[39m");
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-start();
+httpServer.listen(PORT, () => {
+  console.log(
+    "\x1b[39m",
+    `Listening on port`,
+    "\x1b[36m",
+    // "\x1b[1m",
+    // "\x1b[4m",
+    // "\x1b[5m",
+    "http://localhost:5000",
+    "\x1b[0m"
+  );
+});
+connectDb(process.env.MONGODB_URI)
+  .then(() => console.log("\x1b[32m", "Connected Sucessfully", "\x1b[39m"))
+  .catch((e) =>
+    console.log(
+      "\x1b[31m",
+      "Connection Failed",
+      "\x1b[39m",
+      "\n",
+      "\x1b[31m",
+      "Error : ",
+      "\x1b[39m",
+      e
+    )
+  );

@@ -30,13 +30,29 @@ const firebaseUploder = async (folder, image) => {
       metadata
     );
     return await getDownloadURL(uploadedFile?.ref);
-  } catch (error) {}
+  } catch (e) {
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
+    });
+  }
 };
 
 const firebaseImageDelete = async (deleteImagPath, res) => {
   try {
     const deletRef = ref(storage, deleteImagPath);
     const deleteImg = await deleteObject(deletRef);
-  } catch (error) {}
+  } catch (e) {
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
+    });
+  }
 };
 module.exports = { firebaseUploder, firebaseImageDelete };

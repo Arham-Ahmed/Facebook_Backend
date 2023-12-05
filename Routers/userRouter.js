@@ -10,36 +10,43 @@ const {
 } = require("../Controllers/userController");
 const { isauthenticated, hasRole } = require("../Middlewares/auth");
 const { upload } = require("../Middlewares/multermiddleware/upload");
-const { multi } = require("../Middlewares/multermiddleware/multiupload");
+// const { multi } = require("../Middlewares/multermiddleware/multiupload"); /// no more use
 const {
   validateMiddleware,
 } = require("../Middlewares/validatorMiddleware/validateMiddleware");
 const {
   loginPagevalidator,
 } = require("../Middlewares/validatorMiddleware/loginPagevalidator");
+const { response } = require("../utils/response");
 const userRouter = express.Router();
 
 userRouter
-  .get("/", multi, isauthenticated, getallUsers)
-  .get("/user", multi, isauthenticated, userCall)
+  .get("/", isauthenticated, getallUsers)
+  .get("/user", isauthenticated, userCall)
   .post(
     "/register",
     [
-      upload().fields([
-        {
-          name: "profile_photo",
-          maxCount: 1,
-        },
-      ]),
-      // upload.single("profile_photo"),
-      // imageCompresser,
+      (req, res, next) => {
+        upload().fields([
+          {
+            name: "profile_photo",
+            maxCount: 1,
+          },
+        ])(req, res, (err) => {
+          if (err) {
+            return response(res, 500, false, "Multer Error", err);
+          } else {
+            next();
+          }
+        });
+      },
       validateMiddleware,
     ],
     createUser
   )
-  .post("/login", [multi, loginPagevalidator], loginUser)
-  .get("/logout", multi, isauthenticated, LogoutUser)
-  .delete("/delete", multi, isauthenticated, removeUser)
+  .post("/login", loginPagevalidator, loginUser)
+  .get("/logout", isauthenticated, LogoutUser)
+  .delete("/delete", isauthenticated, removeUser)
   .put(
     "/update-user",
     isauthenticated,

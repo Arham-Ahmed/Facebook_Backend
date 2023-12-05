@@ -7,11 +7,11 @@ const {
   searchTodo,
 } = require("../Controllers/controller");
 const { isauthenticated } = require("../Middlewares/auth");
-const { multi } = require("../Middlewares/multermiddleware/multiupload");
+// const { multi } = require("../Middlewares/multermiddleware/multiupload"); // no more use
 
 const router = express.Router();
 
-router.use(multi);
+// router.use(multi);
 router
   .get("/", isauthenticated, getallTodo)
   .get("/search", isauthenticated, searchTodo)

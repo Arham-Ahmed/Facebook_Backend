@@ -30,9 +30,22 @@ const validateMiddleware = (req, res, next) => {
       })
       .unknown(true);
     const { error } = schema.validate(req?.body, { abortEarly: false });
-    if (error) return response(res, 400, false, error?.details);
-  } catch (error) {
-    return response(res, 500, false, error?.message);
+    if (error)
+      return response({
+        res: res,
+        statusCode: 400,
+        sucessBoolean: false,
+        message: "Error",
+        payload: error?.details,
+      });
+  } catch (e) {
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
+    });
   }
   next();
 };

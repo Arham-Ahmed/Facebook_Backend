@@ -10,41 +10,32 @@ const { response } = require("../utils/response");
 ////////////////////////////////// For Creating Post /////////////////////////////
 const createPost = async (req, res) => {
   try {
-    if (!req)
-      return response(
-        res,
-        500,
-        false,
-        "Internal server error cannot get req file :~ userController.js on line 24 "
-      );
     const newPost = {
       caption: req?.body?.caption,
-      owner: global.user?._id,
+      owner: req.user?._id,
     };
     const post = new Post(newPost);
     if (!post)
-      return response(
-        res,
-        500,
-        false,
-        "Some error occured on postcontroller line no 26"
-      );
-    const user = await User?.findById(global.user?._id);
+      return response({
+        res: res,
+        statusCode: 500,
+        sucessBoolean: false,
+        message: "Some error creating post",
+      });
+    const user = await User?.findById(req.user?._id);
     user?.posts?.push(post?._id);
     await user?.save();
 
-    // if (!req?.files) {
-    // }
     if (req?.files?.imageUrl?.length > 0) {
       const imageArray = req?.files?.imageUrl?.map(async (img, index) => {
-        const Filemimetype = img.mimetype;
+        const Filemimetype = img?.mimetype;
         if (!Filemimetype.includes("image/"))
-          return response(
-            res,
-            500,
-            false,
-            "Invalid file format -- Please upload an image"
-          );
+          return response({
+            res: res,
+            statusCode: 500,
+            sucessBoolean: false,
+            message: "Invalid file format -- Please upload an image",
+          });
 
         const image = req?.files?.imageUrl[index];
 
@@ -54,17 +45,28 @@ const createPost = async (req, res) => {
       const allPromis = await Promise.all(imageArray);
       post.imageUrl.push(...allPromis);
       await post.save();
+      return response({
+        res: res,
+        statusCode: 201,
+        message: "Post created sucessfully",
+        payload: post,
+      });
     }
     await post?.save();
-
-    return response(res, 201, "Post created sucessfully", post);
+    return response({
+      res: res,
+      statusCode: 201,
+      message: "Post created sucessfully",
+      payload: post,
+    });
   } catch (e) {
-    return response(
-      res,
-      500,
-      false,
-      `Server error on postController line 190 ${e.message}`
-    );
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
+    });
   }
 };
 ////////////////////////////////// For getall Posts ////////////////////////////////
@@ -160,28 +162,35 @@ const getallPost = async (req, res) => {
         },
       ]);
     if (posts?.length === 0)
-      return response(res, 404, false, "No post available");
-    return response(
-      res,
-      200,
-      true,
-      "All posts",
-      posts.filter((post) => post?.owner?.isDelete === null)
-    );
-  } catch (error) {
-    return response(
-      res,
-      500,
-      false,
-      `Server error on postController line 170 ${error.message}`
-    );
+      return response({
+        res: res,
+        statusCode: 404,
+        sucessBoolean: false,
+        message: "No post available",
+      });
+    const Allposts = posts.filter((post) => post?.owner?.isDelete === null);
+    return response({
+      res: res,
+      statusCode: 200,
+      sucessBoolean: true,
+      message: "All posts",
+      Allposts,
+    });
+  } catch (e) {
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
+    });
   }
 };
 ///////////////////////////// For getallPosts of User ////////////////////////////////
 
 const getallUserPost = async (req, res) => {
   try {
-    const posts = await Post?.find({ owner: global.user?._id })
+    const posts = await Post?.find({ owner: req.user?._id })
       ?.sort("-1")
       .populate([
         {
@@ -202,15 +211,27 @@ const getallUserPost = async (req, res) => {
         },
       ]);
     if (posts?.length === 0)
-      return response(res, 404, false, "No post available");
-    return response(res, 200, true, "All posts of User are", posts);
-  } catch (error) {
-    return response(
-      res,
-      500,
-      false,
-      `Server error on postController line 190 ${error.message}`
-    );
+      return response({
+        res: res,
+        statusCode: 404,
+        sucessBoolean: false,
+        message: "No post available",
+      });
+    return response({
+      res: res,
+      statusCode: 200,
+      sucessBoolean: true,
+      message: "All posts of User are",
+      payload: posts,
+    });
+  } catch (e) {
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
+    });
   }
 };
 
@@ -219,9 +240,20 @@ const removePost = async (req, res) => {
   try {
     const { id } = req?.params;
     const post = await Post?.findOne({ _id: id });
-    if (!post) return response(res, 404, false, "No Post available");
-    if (post.owner.toHexString() !== global.user?.id) {
-      return response(res, 400, false, "Your are not login with this account");
+    if (!post)
+      return response({
+        res: res,
+        statusCode: 404,
+        sucessBoolean: false,
+        message: "No Post available",
+      });
+    if (post.owner.toHexString() !== req.user?.id) {
+      return response({
+        res: res,
+        statusCode: 400,
+        sucessBoolean: false,
+        message: "Your are not login with this account",
+      });
     }
     const refr = post?.imageUrl?.map(async (image, index) => {
       const deleteImagPath = image
@@ -232,18 +264,25 @@ const removePost = async (req, res) => {
 
       await firebaseImageDelete(deleteImagPath, res);
     });
-    const user = await User?.findById({ _id: global.user.id });
+    const user = await User?.findById({ _id: req.user.id });
     const indexofPost = user?.posts?.indexOf(post._id);
     user?.posts?.splice(indexofPost, 1);
     await user?.save();
     const Deletepost = await Post?.findByIdAndDelete({ _id: id });
-    return response(res, 200, "Post deleted sucessfully");
-  } catch (error) {
-    return response(
-      res,
-      500,
-      `Erro on postController line number 131 ${error.message}`
-    );
+    return response({
+      res: res,
+      statusCode: 200,
+      sucessBoolean: true,
+      message: "Post deleted sucessfully",
+    });
+  } catch (e) {
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
+    });
   }
 };
 module.exports = {

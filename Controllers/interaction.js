@@ -17,22 +17,22 @@ const Like = async (req, res) => {
         sucuess: false,
         message: "No UserFound",
       });
-    if (currPost?.likes?.includes(global.user?._id)) {
-      const postIndex = currPost?.likes?.indexOf(global.user?._id);
+    if (currPost?.likes?.includes(req.user?._id)) {
+      const postIndex = currPost?.likes?.indexOf(req.user?._id);
       currPost?.likes?.splice(postIndex, 1);
       await currPost?.save();
       return res.status(200).json({
         sucuess: true,
         message: "UnLiked",
-        likerId: global.user?._id,
+        likerId: req.user?._id,
       });
     } else {
-      currPost?.likes?.push(global.user?._id);
+      currPost?.likes?.push(req.user?._id);
       await currPost?.save();
       return res.status(200).json({
         sucuess: true,
         message: "Liked",
-        likerId: await UserModel.findById({ _id: global.user.id }).select([
+        likerId: await UserModel.findById({ _id: req.user.id }).select([
           "-role",
           "-token",
           "-posts",
@@ -45,10 +45,13 @@ const Like = async (req, res) => {
         ]),
       });
     }
-  } catch (error) {
-    res.status(500).json({
-      sucuess: false,
-      message: error.message,
+  } catch (e) {
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
     });
   }
 };
@@ -56,32 +59,41 @@ const CreateComment = async (req, res) => {
   try {
     const { comment, id } = req?.body;
     if (!id)
-      return res.status(400).json({
-        sucuess: false,
-        message: "No Post Id Found",
+      return response({
+        res: res,
+        statusCode: 400,
+        sucessBoolean: false,
+        message: "Error : Please send comment id",
       });
+
     const currPost = await Post?.findById({ _id: id });
 
     if (!currPost)
-      return res.status(400).json({
-        sucuess: false,
-        message: "No UserFound",
+      return response({
+        res: res,
+        statusCode: 400,
+        sucessBoolean: false,
+        message: "Error : No UserFound",
       });
     const newComment = new Comment({
-      owner: global.user?._id,
+      owner: req.user?._id,
       postid: currPost?._id,
       comment: comment,
     });
     if (!newComment)
-      return res.status(500).json({
-        sucuess: false,
-        message: "Some error occur while creating comment",
+      return response({
+        res: res,
+        statusCode: 400,
+        sucessBoolean: false,
+        message: "Error : Some error occur while creating comment",
       });
+
     currPost.comments.push(newComment._id);
 
     await currPost.save();
     await newComment.save();
 
+    /// Commenter Means Who Comment
     const Commenter = await UserModel.findById({
       _id: newComment?.owner,
     }).select([
@@ -96,17 +108,24 @@ const CreateComment = async (req, res) => {
       "-isDelete",
     ]);
     if (!Commenter)
-      return response(res, 404, "Some error occured on interaction.js line 76");
-    res.status(200).json({
-      sucuess: true,
-      message: "Comment Add",
-      newComment,
-      user: Commenter,
+      return response({
+        res: res,
+        statusCode: 404,
+        message: "Some error occured on interaction.js line 76",
+      });
+    return response({
+      res: res,
+      statusCode: 200,
+      message: "Comment add sucessfully",
+      payload: { newComment, user },
     });
-  } catch (error) {
-    res.status(500).json({
-      sucuess: false,
-      message: error.message,
+  } catch (e) {
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
     });
   }
 };
@@ -134,17 +153,20 @@ const DeleteComment = async (req, res) => {
       sucess: true,
       message: "Comment Deleted Sucessfully",
     });
-  } catch (error) {
-    res.status(500).json({
-      sucess: false,
-      message: error.message,
+  } catch (e) {
+    return response({
+      res: res,
+      statusCode: 500,
+      sucessBoolean: false,
+      message: "Error",
+      payload: e.message,
     });
   }
 };
 // const Authreply = async (req, res) => {
 //   try {
 //     const replyComment = req?.params?.id;
-//     const userwhoReply = global.user?._id;
+//     const userwhoReply = req.user?._id;
 
 //     if (!replyComment || !userwhoReply)
 //       return res.status(400).json({
