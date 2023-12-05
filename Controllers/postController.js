@@ -1,10 +1,13 @@
-const {
-  firebaseUploder,
-  firebaseImageDelete,
-} = require("../helper/firebaseUploader/firebaseUploader");
-const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
+const {
+  firebaseUploder,
+} = require("../helper/firebaseHelperFuncs/firebaseUploader");
+const {
+  firebaseImageDelete,
+} = require("../helper/firebaseHelperFuncs/firebaseDeleter");
+const imagePathMaker = require("../helper/imageHelperFunc's/imagePathMaker");
+// const Comment = require("../Models/Comment");
 const { response } = require("../utils/response");
 
 ////////////////////////////////// For Creating Post /////////////////////////////
@@ -44,15 +47,8 @@ const createPost = async (req, res) => {
       });
       const allPromis = await Promise.all(imageArray);
       post.imageUrl.push(...allPromis);
-      await post.save();
-      return response({
-        res: res,
-        statusCode: 201,
-        message: "Post created sucessfully",
-        payload: post,
-      });
     }
-    await post?.save();
+    await post.save();
     return response({
       res: res,
       statusCode: 201,
@@ -247,7 +243,7 @@ const removePost = async (req, res) => {
         sucessBoolean: false,
         message: "No Post available",
       });
-    if (post.owner.toHexString() !== req.user?.id) {
+    if (post?.owner?.toHexString() !== req.user?.id) {
       return response({
         res: res,
         statusCode: 400,
@@ -255,14 +251,9 @@ const removePost = async (req, res) => {
         message: "Your are not login with this account",
       });
     }
-    const refr = post?.imageUrl?.map(async (image, index) => {
-      const deleteImagPath = image
-        .split("/")
-        [image.split("/").length - 1].replaceAll("%", "")
-        .split("?")[0]
-        .replace("2F", "/");
-
-      await firebaseImageDelete(deleteImagPath, res);
+    post?.imageUrl?.map(async (image, index) => {
+      const deleteImagPath = imagePathMaker(image);
+      await firebaseImageDelete(deleteImagPath);
     });
     const user = await User?.findById({ _id: req.user.id });
     const indexofPost = user?.posts?.indexOf(post._id);

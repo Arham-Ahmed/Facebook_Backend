@@ -8,7 +8,7 @@ const moment = require("moment");
 const {
   firebaseUploder,
   firebaseImageDelete,
-} = require("../helper/firebaseUploader/firebaseUploader");
+} = require("../helper/firebaseHelperFuncs/firebaseUploader");
 // Initialize Firebase
 
 ///////////////////////////////////////////// For Creating Users /////////////////////////////////////

@@ -4,13 +4,11 @@ const {
   ref,
   getDownloadURL,
   uploadBytesResumable,
-  deleteObject,
 } = require("firebase/storage");
 const firebase = require("firebase/app");
 const { firebaseConfig } = require("../../Config/firebaseConfig/firebase");
-const {
-  imageCompressor,
-} = require("../../helper/imageCompressor/imageCompressor");
+const { imageCompressor } = require("../imageCompressor/imageCompressor");
+const { response } = require("../../utils/response");
 
 firebase.initializeApp(firebaseConfig);
 
@@ -19,7 +17,7 @@ const storage = getStorage();
 const firebaseUploder = async (folder, image) => {
   try {
     const imageBuffer = await imageCompressor(image);
-    const fileName = image?.originalname?.split(".")[0];
+    const fileName = image?.originalname?.split(".")[0].replaceAll(" ", "");
     const storageRef = ref(storage, `${folder}/${fileName + "2F" + uuidv4()}`);
     const metadata = {
       contentType: "webp",
@@ -41,18 +39,4 @@ const firebaseUploder = async (folder, image) => {
   }
 };
 
-const firebaseImageDelete = async (deleteImagPath, res) => {
-  try {
-    const deletRef = ref(storage, deleteImagPath);
-    const deleteImg = await deleteObject(deletRef);
-  } catch (e) {
-    return response({
-      res: res,
-      statusCode: 500,
-      sucessBoolean: false,
-      message: "Error",
-      payload: e.message,
-    });
-  }
-};
-module.exports = { firebaseUploder, firebaseImageDelete };
+module.exports = { firebaseUploder };

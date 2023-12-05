@@ -1,7 +1,7 @@
-const response = (res, statusCode, sucessBoolean, Message, payload) => {
+const response = ({ res, statusCode, sucessBoolean, message, payload }) => {
   return res.status(statusCode)?.json({
     sucess: sucessBoolean,
-    message: Message,
+    message: message,
     payload,
   });
 };
