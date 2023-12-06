@@ -25,38 +25,12 @@ userRouter
   .get("/user", isauthenticated, userCall)
   .post(
     "/register",
-    [
-      (req, res, next) => {
-        upload().fields([
-          {
-            name: "profile_photo",
-            maxCount: 1,
-          },
-        ])(req, res, (err) => {
-          if (err) {
-            return response(res, 500, false, "Multer Error", err);
-          } else {
-            next();
-          }
-        });
-      },
-      validateMiddleware,
-    ],
+    [upload("profile_photo", 1), validateMiddleware],
     createUser
   )
   .post("/login", loginPagevalidator, loginUser)
   .get("/logout", isauthenticated, LogoutUser)
   .delete("/delete", isauthenticated, removeUser)
-  .put(
-    "/update-user",
-    isauthenticated,
-    upload().fields([
-      {
-        name: "profile_photo",
-        maxCount: 1,
-      },
-    ]),
-    updateUser
-  );
+  .put("/update-user", isauthenticated, upload("profile_photo", 1), updateUser);
 
 module.exports = { userRouter };

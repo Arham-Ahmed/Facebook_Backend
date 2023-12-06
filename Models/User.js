@@ -23,19 +23,11 @@ const UserSchema = new mongoose.Schema(
     profile_photo: [
       {
         type: String,
-        default:
-          "https://cfd.nu.edu.pk/wp-content/uploads/2020/05/5906-e1646889042179-290x333.jpg",
       },
-      // {
-      //   type: mongoose.Schema.Types.ObjectId,
-      //   ref: "Profileimages",
-      // },
     ],
     cover_photo: [
       {
         type: String,
-        default:
-          "https://e1.pxfuel.com/desktop-wallpaper/96/350/desktop-wallpaper-facebook-cover-for-fb-cover-page.jpg",
       },
     ],
     phoneNumber: {

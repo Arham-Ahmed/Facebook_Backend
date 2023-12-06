@@ -14,6 +14,7 @@ const { router } = require("./Routers/router");
 const { userRouter } = require("./Routers/userRouter");
 const { isauthenticated } = require("./Middlewares/auth");
 const { postRouter } = require("./Routers/postRouter");
+const { errorHandler } = require("./Middlewares/errorHandler/errorHandler");
 // const { rateLimit } = require("express-rate-limit");
 // middelware
 
@@ -77,7 +78,7 @@ app.use("/users", userRouter);
 app.use("/posts", isauthenticated, postRouter);
 app.use(express.static(path.join(__dirname, "public/images")));
 app.use(express.static(path.join(__dirname, "public/Postimages")));
-
+app.use(errorHandler);
 // Server Function
 
 httpServer.listen(PORT, () => {
