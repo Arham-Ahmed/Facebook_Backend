@@ -8,16 +8,22 @@ const {
   LogoutUser,
   loginUser,
 } = require("../Controllers/userController");
-const { isauthenticated, hasRole } = require("../Middlewares/auth");
+const { isauthenticated } = require("../Middlewares/auth");
 const { upload } = require("../Middlewares/multermiddleware/upload");
 // const { multi } = require("../Middlewares/multermiddleware/multiupload"); /// no more use
 const {
-  validateMiddleware,
-} = require("../Middlewares/validatorMiddleware/validateMiddleware");
+  validator,
+} = require("../Middlewares/validatorMiddleware/ValidatorFunc/Validator");
 const {
-  loginPagevalidator,
-} = require("../Middlewares/validatorMiddleware/loginPagevalidator");
-const { response } = require("../utils/response");
+  userLoginSchema,
+} = require("../Middlewares/validatorMiddleware/ValidatorSchemas/userLoginSchema");
+const {
+  userUpdateSchema,
+} = require("../Middlewares/validatorMiddleware/ValidatorSchemas/userUpdateValidator");
+const {
+  userSignupSchema,
+} = require("../Middlewares/validatorMiddleware/ValidatorSchemas/userSignupSchema");
+
 const userRouter = express.Router();
 
 userRouter
@@ -25,12 +31,16 @@ userRouter
   .get("/user", isauthenticated, userCall)
   .post(
     "/register",
-    [upload("profile_photo", 1), validateMiddleware],
+    [upload("profile_photo", 1), validator(userSignupSchema)],
     createUser
   )
-  .post("/login", loginPagevalidator, loginUser)
+  .post("/login", validator(userLoginSchema), loginUser)
   .get("/logout", isauthenticated, LogoutUser)
   .delete("/delete", isauthenticated, removeUser)
-  .put("/update-user", isauthenticated, upload("profile_photo", 1), updateUser);
+  .put(
+    "/update-user",
+    [isauthenticated, upload("profile_photo", 1), validator(userUpdateSchema)],
+    updateUser
+  );
 
 module.exports = { userRouter };
