@@ -8,7 +8,7 @@ const TokenSchema = new mongoose.Schema(
 
     expireAt: {
       type: Date,
-      default: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toDateString(),
+      default: Date.now() + 90 * 24 * 60 * 60 * 1000,
     },
     user_id: {
       type: mongoose.Schema.Types.ObjectId,

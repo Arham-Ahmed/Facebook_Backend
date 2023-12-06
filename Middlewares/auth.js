@@ -1,6 +1,7 @@
 require("dotenv").config({ path: "../Secrets/.env" });
 const jwt = require("jsonwebtoken");
 const Users = require("../Models/User");
+const tokenModel = require("../Models/Token");
 const { response } = require("../utils/response");
 
 const JWTSCERET = process.env.JWTSCERET;
@@ -25,6 +26,8 @@ const isauthenticated = async (req, res, next) => {
         message: "Unable to acess PLz Login First --- Please send token ",
       });
     }
+    const databaseToken = await tokenModel.findOne({ token: token });
+
     const decode = jwt?.verify(token, JWTSCERET);
     if (!decode)
       return response({
@@ -33,6 +36,14 @@ const isauthenticated = async (req, res, next) => {
         sucessBoolean: false,
         message: "Unauthorized -- Login agian",
       });
+    if (databaseToken && Number(databaseToken.expireAt) < decode.exp)
+      return response({
+        res,
+        statusCode: 400,
+        sucessBoolean: false,
+        message: "Unauthorized - Token is expired. Please login again.",
+      });
+
     const user = await Users.findById(decode._id);
     if (!user)
       return response({

@@ -30,12 +30,12 @@ const createUser = async (req, res) => {
 
       const newUser = new Users(user);
       if (!newUser)
-        return response(
-          res,
-          500,
-          false,
-          "Some error occur on creating account"
-        );
+        return response({
+          res: res,
+          statusCode: 500,
+          sucessBoolean: false,
+          message: "Some error occur on creating account",
+        });
       if (req?.files?.profile_photo?.length) {
         const img = req?.files?.profile_photo[0];
         imageMimetype(img, res);
@@ -127,32 +127,6 @@ const loginUser = async (req, res) => {
     await newToken?.save();
     user.token?.push(newToken?._id);
     await user?.save();
-    // res
-    //   .status(200)
-    //   ?.cookie("token", token, Option)
-    //   ?.json({
-    //     sucess: true,
-    //     message: "Loggin SucessFully",
-    //     user: await Users?.findById({ _id: user?.id })?.select([
-    //       "-password",
-    //       "-role",
-    //       "-token",
-    //     ]),
-    //     token,
-    //   });
-    // res
-    //   .status(200)
-    //   ?.cookie("token", token, Option)
-    //   ?.json({
-    //     sucess: true,
-    //     message: "Loggin SucessFully",
-    //     user: await Users?.findById({ _id: user?.id })?.select([
-    //       "-password",
-    //       "-role",
-    //       "-token",
-    //     ]),
-    //     token,
-    //   });
     return response({
       res: res,
       statusCode: 200,
@@ -193,6 +167,17 @@ const LogoutUser = async (req, res) => {
         sucessBoolean: false,
         message: "Unable To Logout Login First",
       });
+
+    const databaseToken = await tokenModel.findOne({ token: token });
+    if (!databaseToken)
+      return response({
+        res: res,
+        statusCode: 500,
+        sucessBoolean: true,
+        message: "Failed to logout. Please try again.",
+      });
+    databaseToken.expireAt = Date.now();
+    await databaseToken.save();
     return response({
       res: res,
       statusCode: 200,
@@ -255,7 +240,6 @@ const removeUser = async (req, res) => {
     );
 
     if (deleteUser) {
-      await res?.clearCookie("token");
       return response({
         res: res,
         statusCode: 200,
