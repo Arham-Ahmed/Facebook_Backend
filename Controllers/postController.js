@@ -51,7 +51,7 @@ const createPost = async (req, res) => {
   } catch (e) {
     return response({
       res: res,
-      statusCode: 500,
+      statusCode: e.statusCode || 500,
       sucessBoolean: false,
       message: "Error",
       payload: e.message,
@@ -61,109 +61,56 @@ const createPost = async (req, res) => {
 ////////////////////////////////// For getall Posts ////////////////////////////////
 const getallPost = async (req, res) => {
   let posts;
+  const populateValue = [
+    {
+      path: "owner",
+      select: ["name", "profile_photo", "isDelete"],
+    },
+    {
+      path: "comments",
+      populate: {
+        path: "owner",
+        model: "User",
+        select: ["name", "profile_photo", "createdAt"],
+      },
+    },
+    {
+      path: "likes",
+      select: ["name", "profile_photo", "createdAt"],
+    },
+  ];
   try {
-    const { id, name, email } = req?.query;
-
+    const { id, caption, email } = req?.query;
+    posts = await Post?.find({})?.sort().populate(populateValue);
     if (id) {
-      posts = await Post?.find({ _id: id })
-        ?.sort()
-        .populate([
-          {
-            path: "owner",
-            select: ["name", "profile_photo"],
-          },
-          {
-            path: "comments",
-            populate: {
-              path: "owner",
-              model: "User",
-              select: ["name", "profile_photo", "createdAt"],
-            },
-          },
-          {
-            path: "likes",
-            select: ["name", "profile_photo", "createdAt"],
-          },
-        ]);
+      posts = await Post?.find({ _id: id })?.sort().populate(populateValue);
     }
-    if (name) {
-      posts = await Post?.find({ name: { $regex: name, $options: "i" } })
+    if (caption) {
+      posts = await Post?.find({ caption: { $regex: caption, $options: "i" } })
         ?.sort()
-        .populate([
-          {
-            path: "owner",
-            select: ["name", "profile_photo"],
-          },
-          {
-            path: "comments",
-            populate: {
-              path: "owner",
-              model: "User",
-              select: ["name", "profile_photo", "createdAt"],
-            },
-          },
-          {
-            path: "likes",
-            select: ["name", "profile_photo", "createdAt"],
-          },
-        ]);
+        .populate(populateValue);
     }
     if (email) {
       posts = await Post?.find({ email: { $regex: email, $option: i } })
         ?.sort()
-        .populate([
-          {
-            path: "owner",
-            select: ["name", "profile_photo"],
-          },
-          {
-            path: "comments",
-            populate: {
-              path: "owner",
-              model: "User",
-              select: ["name", "profile_photo", "createdAt"],
-            },
-          },
-          {
-            path: "likes",
-            select: ["name", "profile_photo", "createdAt"],
-          },
-        ]);
+        .populate(populateValue);
     }
-    posts = await Post?.find({})
-      ?.sort()
-      .populate([
-        {
-          path: "owner",
-          select: ["name", "profile_photo", "isDelete"],
-        },
-        {
-          path: "comments",
-          populate: {
-            path: "owner",
-            model: "User",
-            select: ["name", "profile_photo", "createdAt"],
-          },
-        },
-        {
-          path: "likes",
-          select: ["name", "profile_photo", "createdAt"],
-        },
-      ]);
-    if (posts?.length === 0)
+
+    if (!posts?.length)
       return response({
         res: res,
         statusCode: 404,
         sucessBoolean: false,
         message: "No post available",
       });
-    const Allposts = posts.filter((post) => post?.owner?.isDelete === null);
+    const allPosts = posts.filter((post) => post?.owner?.isDelete === null);
+
     return response({
       res: res,
       statusCode: 200,
       sucessBoolean: true,
       message: "All posts",
-      Allposts,
+      payload: allPosts,
     });
   } catch (e) {
     return response({
@@ -179,27 +126,28 @@ const getallPost = async (req, res) => {
 
 const getallUserPost = async (req, res) => {
   try {
-    const posts = await Post?.find({ owner: req.user?._id })
-      ?.sort("-1")
-      .populate([
-        {
+    const populateValue = [
+      {
+        path: "owner",
+        select: ["name", "profile_photo", "isDelete"],
+      },
+      {
+        path: "comments",
+        populate: {
           path: "owner",
-          select: ["name", "profile_photo"],
-        },
-        {
-          path: "comments",
-          populate: {
-            path: "owner",
-            model: "User",
-            select: ["name", "profile_photo", "createdAt"],
-          },
-        },
-        {
-          path: "likes",
+          model: "User",
           select: ["name", "profile_photo", "createdAt"],
         },
-      ]);
-    if (posts?.length === 0)
+      },
+      {
+        path: "likes",
+        select: ["name", "profile_photo", "createdAt"],
+      },
+    ];
+    const posts = await Post?.find({ owner: req.user?._id })
+      ?.sort("-1")
+      .populate(populateValue);
+    if (!posts?.length)
       return response({
         res: res,
         statusCode: 404,

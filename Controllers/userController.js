@@ -362,7 +362,7 @@ const getallUsers = async (req, res) => {
   } catch (e) {
     return response({
       res: res,
-      statusCode: 500,
+      statusCode: e.statusCode || 500,
       sucessBoolean: false,
       message: "Error",
       payload: e.message,

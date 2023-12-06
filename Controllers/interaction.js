@@ -1,4 +1,4 @@
-const { response } = require("express");
+const { response } = require("../utils/response");
 const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const UserModel = require("../Models/User");
@@ -7,42 +7,59 @@ const Like = async (req, res) => {
   try {
     const postId = req?.params?.id;
     if (!postId)
-      return res.status(400).json({
-        sucuess: false,
-        message: "No Post Id Found",
+      return response({
+        res: res,
+        statusCode: 400,
+        sucessBoolean: false,
+        message: "Error :( no post id found",
       });
     const currPost = await Post?.findById({ _id: postId });
     if (!currPost)
-      return res.status(400).json({
-        sucuess: false,
-        message: "No UserFound",
+      return response({
+        res: res,
+        statusCode: 400,
+        sucessBoolean: false,
+        message: "Error :( no userFound",
       });
     if (currPost?.likes?.includes(req.user?._id)) {
       const postIndex = currPost?.likes?.indexOf(req.user?._id);
       currPost?.likes?.splice(postIndex, 1);
       await currPost?.save();
-      return res.status(200).json({
-        sucuess: true,
-        message: "UnLiked",
-        likerId: req.user?._id,
+
+      return response({
+        res: res,
+        statusCode: 200,
+        sucessBoolean: true,
+        message: "UnLiked :(",
       });
     } else {
       currPost?.likes?.push(req.user?._id);
       await currPost?.save();
-      return res.status(200).json({
-        sucuess: true,
-        message: "Liked",
-        likerId: await UserModel.findById({ _id: req.user.id }).select([
-          "-role",
-          "-token",
-          "-posts",
-          "-todos",
-          "-followers",
-          "-following",
-          "-cover_photo",
-          "-email",
-          "-isDelete",
-        ]),
+      const likerId = await UserModel?.findById({ _id: req.user.id }).select([
+        "-role",
+        "-token",
+        "-posts",
+        "-todos",
+        "-followers",
+        "-following",
+        "-cover_photo",
+        "-email",
+        "-isDelete",
+      ]);
+      if (!likerId)
+        return response({
+          res: res,
+          statusCode: 400,
+          sucessBoolean: false,
+          message: "Error :( no likerId id found",
+        });
+
+      return response({
+        res: res,
+        statusCode: 200,
+        sucessBoolean: true,
+        message: "Liked :)",
+        payload: likerId,
       });
     }
   } catch (e) {
@@ -117,7 +134,7 @@ const CreateComment = async (req, res) => {
       res: res,
       statusCode: 200,
       message: "Comment add sucessfully",
-      payload: { newComment, user },
+      payload: { newComment, Commenter },
     });
   } catch (e) {
     return response({
