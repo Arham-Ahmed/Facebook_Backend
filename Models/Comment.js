@@ -13,6 +13,7 @@ const CommentSchema = new mongoose.Schema(
     comment: {
       type: String,
       required: true,
+      maxLength: [50, "Comment must be Shorter than 50 Character"],
     },
     reply: {
       type: String,

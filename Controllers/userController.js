@@ -51,8 +51,6 @@ const createUser = async (req, res) => {
         const image = req?.files?.profile_photo[0];
         const downloadUrl = await firebaseUploder("profile_photo", image);
         newUser?.profile_photo.push(downloadUrl);
-        // await newUser.save();
-        // return response(res, 201, true, "User created sucessfully", newUser);
       }
       await newUser.save();
       return response({
@@ -91,7 +89,7 @@ const loginUser = async (req, res) => {
         res: res,
         statusCode: 401,
         sucessBoolean: false,
-        message: "Invalid Credential",
+        message: "User not exists",
       });
     if (user?.isDelete)
       return response({
@@ -237,7 +235,7 @@ const removeUser = async (req, res) => {
       });
     }
 
-    const refr = user?.profile_photo?.map(async (image, index) => {
+    user?.profile_photo?.map(async (image, index) => {
       const deleteImagPath = image
         .split("/")
         [image.split("/").length - 1].replaceAll("%", "")

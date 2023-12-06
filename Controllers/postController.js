@@ -81,18 +81,22 @@ const getallPost = async (req, res) => {
   ];
   try {
     const { id, caption, email } = req?.query;
-    posts = await Post?.find({})?.sort().populate(populateValue);
+    posts = await Post?.find({})
+      ?.sort({ createdAt: -1 })
+      .populate(populateValue);
     if (id) {
-      posts = await Post?.find({ _id: id })?.sort().populate(populateValue);
+      posts = await Post?.find({ _id: id })
+        ?.sort({ createdAt: -1 })
+        .populate(populateValue);
     }
     if (caption) {
       posts = await Post?.find({ caption: { $regex: caption, $options: "i" } })
-        ?.sort()
+        ?.sort({ createdAt: -1 })
         .populate(populateValue);
     }
     if (email) {
       posts = await Post?.find({ email: { $regex: email, $option: i } })
-        ?.sort()
+        ?.sort({ createdAt: -1 })
         .populate(populateValue);
     }
 
@@ -145,13 +149,13 @@ const getallUserPost = async (req, res) => {
       },
     ];
     const posts = await Post?.find({ owner: req.user?._id })
-      ?.sort("-1")
+      ?.sort({ createdAt: -1 })
       .populate(populateValue);
     if (!posts?.length)
       return response({
         res: res,
-        statusCode: 404,
-        sucessBoolean: false,
+        statusCode: 200,
+        sucessBoolean: true,
         message: "No post available",
       });
     return response({

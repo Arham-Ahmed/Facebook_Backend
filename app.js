@@ -79,6 +79,7 @@ app.use("/posts", isauthenticated, postRouter);
 app.use(express.static(path.join(__dirname, "public/images")));
 app.use(express.static(path.join(__dirname, "public/Postimages")));
 app.use(errorHandler);
+app.use(require("express-status-monitor")());
 // Server Function
 
 httpServer.listen(PORT, () => {

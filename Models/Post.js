@@ -5,7 +5,7 @@ const PostScehma = new mongoose.Schema(
     caption: {
       type: String,
       required: [true, "Plz Add Some Text"],
-      min: [150, "Password must be Shorter than 150 Character"],
+      maxLength: [150, "Caption must be Shorter than 150 Character"],
     },
     imageUrl: [{ type: String }],
     owner: {
