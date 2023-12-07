@@ -59,7 +59,7 @@ const isauthenticated = async (req, res, next) => {
           message: "User not found",
         });
       req.user = user;
-      // req.token = token;  /// for Future Use
+      req.token = token; /// for Future Use
       next();
     });
   } catch (e) {

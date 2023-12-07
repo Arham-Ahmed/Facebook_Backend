@@ -210,6 +210,7 @@ const removeUser = async (req, res) => {
         message: "Invalid Credential",
       });
     }
+
     const isMatch = bcryptjs?.compare(password, user?.password);
     if (!isMatch) {
       return response({
@@ -220,34 +221,75 @@ const removeUser = async (req, res) => {
       });
     }
 
-    user?.profile_photo?.map(async (image, index) => {
+    const deletedImages = user?.profile_photo?.map(async (image, index) => {
       const deleteImagePath = imagePathMaker(image);
-      firebaseImageDelete(deleteImagePath, res).catch(async (error) => {
-        if (error) {
+      return firebaseImageDelete(deleteImagePath, res);
+    });
+    await Promise.all(deletedImages)
+      .then(async () => {
+        const deleteUser = await Users?.findByIdAndUpdate(req.user?._id, {
+          isDelete: moment().format("YYYY MMMM Do , h:mm:ss a"),
+        });
+        if (!deleteUser) {
           return response({
             res: res,
             statusCode: 500,
             sucessBoolean: false,
-            message: "Error",
-            payload: error.message,
+            message: "User not found",
           });
-        } else {
-          user.profile_photo = [];
-          await user.save();
-          const deleteUser = await Users?.findByIdAndUpdate(req.user?._id, {
-            isDelete: moment().format("YYYY MMMM Do , h:mm:ss a"),
-          });
-          if (deleteUser) {
-            return response({
-              res: res,
-              statusCode: 200,
-              sucessBoolean: true,
-              message: "Deleted sucessfully",
-            });
-          }
         }
+        user.profile_photo = [];
+        await user.save();
+        const databaseToken = await tokenModel.findOne({ token: req.token });
+        if (!databaseToken)
+          return response({
+            res: res,
+            statusCode: 500,
+            sucessBoolean: true,
+            message: "Failed to logout. Please try again.",
+          });
+        databaseToken.expireAt = Date.now();
+        await databaseToken.save();
+
+        return response({
+          res: res,
+          statusCode: 200,
+          sucessBoolean: true,
+          message: "Deleted sucessfully",
+        });
+      })
+      .catch(async (error) => {
+        const deleteUser = await Users?.findByIdAndUpdate(req.user?._id, {
+          isDelete: moment().format("YYYY MMMM Do , h:mm:ss a"),
+        });
+        if (!deleteUser) {
+          return response({
+            res: res,
+            statusCode: 500,
+            sucessBoolean: false,
+            message: "User not found",
+          });
+        }
+        user.profile_photo = [];
+        await user.save();
+        const databaseToken = await tokenModel.findOne({ token: req.token });
+        if (!databaseToken)
+          return response({
+            res: res,
+            statusCode: 500,
+            sucessBoolean: true,
+            message: "Failed to logout. Please try again.",
+          });
+        databaseToken.expireAt = Date.now();
+        await databaseToken.save();
+        return response({
+          res: res,
+          statusCode: 202,
+          sucessBoolean: true,
+          message: "Request fullfield but error ocuured",
+          payload: error?.message,
+        });
       });
-    });
   } catch (e) {
     return response({
       res: res,
@@ -389,3 +431,17 @@ module.exports = {
   LogoutUser,
   userCall,
 };
+
+// user.profile_photo = [];
+// await user.save();
+// const deleteUser = await Users?.findByIdAndUpdate(req.user?._id, {
+//   isDelete: moment().format("YYYY MMMM Do , h:mm:ss a"),
+// });
+// if (deleteUser) {
+//   return response({
+//     res: res,
+//     statusCode: 200,
+//     sucessBoolean: true,
+//     message: "Deleted sucessfully",
+//   });
+// }
