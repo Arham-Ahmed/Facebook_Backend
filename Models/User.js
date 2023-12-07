@@ -52,12 +52,6 @@ const UserSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    todos: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Todo",
-      },
-    ],
     role: {
       type: String,
       default: "user",

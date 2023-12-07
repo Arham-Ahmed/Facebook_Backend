@@ -13,7 +13,7 @@ const Like = async (req, res) => {
         sucessBoolean: false,
         message: "Error :( no post id found",
       });
-    const currPost = await Post?.findById({ _id: postId });
+    const currPost = await Post?.findById(postId);
     if (!currPost)
       return response({
         res: res,
@@ -35,7 +35,7 @@ const Like = async (req, res) => {
     } else {
       currPost?.likes?.push(req.user?._id);
       await currPost?.save();
-      const likerId = await UserModel?.findById({ _id: req.user.id }).select([
+      const likerId = await UserModel?.findById(req.user.id).select([
         "-role",
         "-token",
         "-posts",
@@ -83,7 +83,7 @@ const CreateComment = async (req, res) => {
         message: "Error : Please send comment id",
       });
 
-    const currPost = await Post?.findById({ _id: id });
+    const currPost = await Post?.findById(id);
 
     if (!currPost)
       return response({
@@ -111,9 +111,7 @@ const CreateComment = async (req, res) => {
     await newComment.save();
 
     /// Commenter Means Who Comment
-    const Commenter = await UserModel.findById({
-      _id: newComment?.owner,
-    }).select([
+    const Commenter = await UserModel.findById(newComment?.owner).select([
       "-role",
       "-token",
       "-posts",
@@ -157,7 +155,7 @@ const DeleteComment = async (req, res) => {
         message: "Cannot Delete Some Issue with your request",
       });
 
-    const comment = await Comment?.findById({ _id: id });
+    const comment = await Comment?.findById(id);
     if (!comment)
       return response({
         res: res,
@@ -166,11 +164,11 @@ const DeleteComment = async (req, res) => {
         message: "Comments are Empty",
       });
     const postID = comment.postid.toHexString();
-    const post = await Post?.findById({ _id: postID });
+    const post = await Post?.findById(postID);
     const indexofComment = post?.comments?.indexOf(id);
     post?.comments?.splice(indexofComment, 1);
     await post?.save();
-    await Comment?.findByIdAndDelete({ _id: id });
+    await Comment?.findByIdAndDelete(id);
 
     return response({
       res: res,

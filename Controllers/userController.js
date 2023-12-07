@@ -8,8 +8,9 @@ const moment = require("moment");
 const {
   firebaseUploder,
   firebaseImageDelete,
-} = require("../helper/firebaseHelperFuncs/firebaseUploader");
-const imageMimetype = require("../helper/imageHelperFunc's/imageMimeType");
+  imageMimetype,
+  imagePathMaker,
+} = require("../helper");
 // Initialize Firebase
 
 ///////////////////////////////////////////// For Creating Users /////////////////////////////////////
@@ -23,7 +24,7 @@ const createUser = async (req, res) => {
     const existsuser = await Users?.findOne({ email: user?.email });
     if (!existsuser || existsuser?.isDelete) {
       if (existsuser?.isDelete) {
-        const userRplace = await Users?.findOneAndDelete({
+        await Users?.findOneAndDelete({
           email: user?.email,
         });
       }
@@ -84,20 +85,14 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
     const user = await Users?.findOne({ email: email })?.select("+password");
-    if (!user)
+    if (!user || user?.isDelete) {
       return response({
         res: res,
         statusCode: 401,
         sucessBoolean: false,
-        message: "User not exists",
-      });
-    if (user?.isDelete)
-      return response({
-        res: res,
-        statusCode: 400,
-        sucessBoolean: false,
         message: "User not found",
       });
+    }
 
     const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch)
@@ -108,35 +103,48 @@ const loginUser = async (req, res) => {
         message: "Invalid Credential",
       });
 
-    const token = jwt?.sign({ _id: user?._id }, process?.env?.JWTSCERET, {
-      expiresIn: "90d",
-    });
-    if (!token)
-      return response({
-        res: res,
-        statusCode: 500,
-        sucessBoolean: false,
-        message: "Somthing went wrong",
-      });
-
-    const newToken = new tokenModel({
-      token: token,
-      Device: req?.headers["user-agent"],
-      user_id: user?._id,
-    });
-    await newToken?.save();
-    user.token?.push(newToken?._id);
-    await user?.save();
-    return response({
-      res: res,
-      statusCode: 200,
-      sucessBoolean: true,
-      message: "Login sucessfully",
-      payload: {
-        user: user,
-        token: token,
+    jwt?.sign(
+      { _id: user?._id },
+      process?.env?.JWTSCERET,
+      {
+        expiresIn: "90d",
       },
-    });
+      async (err, token) => {
+        if (err) {
+          return response({
+            res: res,
+            statusCode: 500,
+            sucessBoolean: false,
+            message: "Internal server error",
+          });
+        } else {
+          const newToken = new tokenModel({
+            token: token,
+            Device: req?.headers["user-agent"],
+            user_id: user?._id,
+          });
+          if (!newToken)
+            return response({
+              res: res,
+              statusCode: 500,
+              sucessBoolean: false,
+              message: "Internal server error",
+            });
+
+          await newToken?.save();
+          return response({
+            res: res,
+            statusCode: 200,
+            sucessBoolean: true,
+            message: "Login sucessfully",
+            payload: {
+              user: user,
+              token: token,
+            },
+          });
+        }
+      }
+    );
   } catch (e) {
     return response({
       res: res,
@@ -152,22 +160,14 @@ const loginUser = async (req, res) => {
 const LogoutUser = async (req, res) => {
   try {
     const authorization = req?.headers?.authorization;
-    if (!authorization)
+    const token = authorization?.split(" ")[1];
+    if (!authorization && !token)
       return response({
         res: res,
         statusCode: 401,
         sucessBoolean: false,
-        message: "Unauthorized",
+        message: "Unauthorized !",
       });
-    const token = authorization.split(" ")[1];
-    if (!token)
-      return response({
-        res: res,
-        statusCode: 401,
-        sucessBoolean: false,
-        message: "Unable To Logout Login First",
-      });
-
     const databaseToken = await tokenModel.findOne({ token: token });
     if (!databaseToken)
       return response({
@@ -221,32 +221,33 @@ const removeUser = async (req, res) => {
     }
 
     user?.profile_photo?.map(async (image, index) => {
-      const deleteImagPath = image
-        .split("/")
-        [image.split("/").length - 1].replaceAll("%", "")
-        .split("?")[0]
-        .replace("2F", "/");
-
-      await firebaseImageDelete(deleteImagPath, res);
-    });
-    user.profile_photo = [];
-    await user.save();
-
-    const deleteUser = await Users?.findByIdAndUpdate(
-      { _id: req.user?._id },
-      {
-        isDelete: moment().format("YYYY MMMM Do , h:mm:ss a"),
-      }
-    );
-
-    if (deleteUser) {
-      return response({
-        res: res,
-        statusCode: 200,
-        sucessBoolean: true,
-        message: "Deleted sucessfully",
+      const deleteImagePath = imagePathMaker(image);
+      firebaseImageDelete(deleteImagePath, res).catch(async (error) => {
+        if (error) {
+          return response({
+            res: res,
+            statusCode: 500,
+            sucessBoolean: false,
+            message: "Error",
+            payload: error.message,
+          });
+        } else {
+          user.profile_photo = [];
+          await user.save();
+          const deleteUser = await Users?.findByIdAndUpdate(req.user?._id, {
+            isDelete: moment().format("YYYY MMMM Do , h:mm:ss a"),
+          });
+          if (deleteUser) {
+            return response({
+              res: res,
+              statusCode: 200,
+              sucessBoolean: true,
+              message: "Deleted sucessfully",
+            });
+          }
+        }
       });
-    }
+    });
   } catch (e) {
     return response({
       res: res,
@@ -355,9 +356,9 @@ const getallUsers = async (req, res) => {
 const userCall = async (req, res) => {
   try {
     const user_id = req.user?._id;
-    const user = await Users?.findById({ _id: user_id })
+    const user = await Users?.findById(user_id)
       .select(["-token", "-role", "-password"])
-      .populate(["todos", "posts"]);
+      .populate("posts");
     return response({
       res: res,
       statusCode: 200,

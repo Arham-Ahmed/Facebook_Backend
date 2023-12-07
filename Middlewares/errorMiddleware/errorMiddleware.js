@@ -12,4 +12,4 @@ const errorHandler = async (error, req, res, next) => {
   });
 };
 
-module.exports = { errorHandler };
+module.exports = errorHandler;

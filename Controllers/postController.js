@@ -2,14 +2,12 @@ const Post = require("../Models/Post");
 const User = require("../Models/User");
 const {
   firebaseUploder,
-} = require("../helper/firebaseHelperFuncs/firebaseUploader");
-const {
   firebaseImageDelete,
-} = require("../helper/firebaseHelperFuncs/firebaseDeleter");
-const imagePathMaker = require("../helper/imageHelperFunc's/imagePathMaker");
-// const Comment = require("../Models/Comment");
+  imagePathMaker,
+  imageMimetype,
+} = require("../helper/index");
+
 const { response } = require("../utils/response");
-const imageMimetype = require("../helper/imageHelperFunc's/imageMimeType");
 
 ////////////////////////////////// For Creating Post /////////////////////////////
 const createPost = async (req, res) => {
@@ -24,18 +22,26 @@ const createPost = async (req, res) => {
         res: res,
         statusCode: 500,
         sucessBoolean: false,
-        message: "Some error creating post",
+        message: "Some error on creating post",
       });
     const user = await User?.findById(req.user?._id);
+    if (!user)
+      return response({
+        res: res,
+        statusCode: 500,
+        sucessBoolean: false,
+        message: "User not found",
+      });
     user?.posts?.push(post?._id);
     await user?.save();
 
-    if (req?.files?.imageUrl?.length > 0) {
+    if (req?.files?.imageUrl?.length) {
       const imageArray = req?.files?.imageUrl?.map(async (img, index) => {
+        // imageMimeType checker
         imageMimetype(img, res);
         const image = req?.files?.imageUrl[index];
-
-        const postdownloadUrl = await firebaseUploder("/post_images", image);
+        // Firebase uploader
+        const postdownloadUrl = firebaseUploder("/post_images", image);
         return postdownloadUrl;
       });
       const allPromis = await Promise.all(imageArray);
@@ -60,7 +66,6 @@ const createPost = async (req, res) => {
 };
 ////////////////////////////////// For getall Posts ////////////////////////////////
 const getallPost = async (req, res) => {
-  let posts;
   const populateValue = [
     {
       path: "owner",
@@ -80,32 +85,15 @@ const getallPost = async (req, res) => {
     },
   ];
   try {
-    const { id, caption, email } = req?.query;
-    posts = await Post?.find({})
-      ?.sort({ createdAt: -1 })
-      .populate(populateValue);
-    if (id) {
-      posts = await Post?.find({ _id: id })
-        ?.sort({ createdAt: -1 })
-        .populate(populateValue);
-    }
-    if (caption) {
-      posts = await Post?.find({ caption: { $regex: caption, $options: "i" } })
-        ?.sort({ createdAt: -1 })
-        .populate(populateValue);
-    }
-    if (email) {
-      posts = await Post?.find({ email: { $regex: email, $option: i } })
-        ?.sort({ createdAt: -1 })
-        .populate(populateValue);
-    }
-
+    let posts = await Post?.find({})
+      ?.populate(populateValue)
+      ?.sort("-createdAt");
     if (!posts?.length)
       return response({
         res: res,
         statusCode: 404,
         sucessBoolean: false,
-        message: "No post available",
+        message: "No post found",
       });
     const allPosts = posts.filter((post) => post?.owner?.isDelete === null);
 
@@ -149,8 +137,9 @@ const getallUserPost = async (req, res) => {
       },
     ];
     const posts = await Post?.find({ owner: req.user?._id })
-      ?.sort({ createdAt: -1 })
-      .populate(populateValue);
+
+      ?.populate(populateValue)
+      ?.sort(createdAt);
     if (!posts?.length)
       return response({
         res: res,
@@ -184,9 +173,9 @@ const removePost = async (req, res) => {
     if (!post)
       return response({
         res: res,
-        statusCode: 404,
-        sucessBoolean: false,
-        message: "No Post available",
+        statusCode: 202,
+        sucessBoolean: true,
+        message: "No post found",
       });
     if (post?.owner?.toHexString() !== req.user?.id) {
       return response({
@@ -196,21 +185,55 @@ const removePost = async (req, res) => {
         message: "Your are not login with this account",
       });
     }
-    post?.imageUrl?.map(async (image, index) => {
+
+    const deletedImages = post?.imageUrl?.map(async (image, index) => {
       const deleteImagPath = imagePathMaker(image);
-      await firebaseImageDelete(deleteImagPath);
+      return firebaseImageDelete(deleteImagPath);
     });
-    const user = await User?.findById({ _id: req.user.id });
-    const indexofPost = user?.posts?.indexOf(post._id);
-    user?.posts?.splice(indexofPost, 1);
-    await user?.save();
-    const Deletepost = await Post?.findByIdAndDelete({ _id: id });
-    return response({
-      res: res,
-      statusCode: 200,
-      sucessBoolean: true,
-      message: "Post deleted sucessfully",
-    });
+
+    await Promise.all(deletedImages)
+      .then(async () => {
+        const user = await User?.findById(req.user?.id);
+        if (!user) {
+          return response({
+            res: res,
+            statusCode: 500,
+            sucessBoolean: false,
+            message: "User not found",
+          });
+        }
+        await Post?.findByIdAndDelete(id);
+        user?.posts?.filter((post) => post != post._id);
+        await user?.save();
+
+        return response({
+          res: res,
+          statusCode: 200,
+          sucessBoolean: true,
+          message: "Post deleted sucessfully",
+        });
+      })
+      .catch(async (error) => {
+        const user = await User?.findById(req.user.id);
+        if (!user) {
+          return response({
+            res: res,
+            statusCode: 500,
+            sucessBoolean: false,
+            message: "User not found",
+          });
+        }
+        await Post?.findByIdAndDelete(id);
+        user?.posts?.filter((post) => post != post._id);
+        await user?.save();
+        return response({
+          res: res,
+          statusCode: 202,
+          sucessBoolean: true,
+          message: "Request fullfield but error ocuured",
+          payload: error?.message,
+        });
+      });
   } catch (e) {
     return response({
       res: res,

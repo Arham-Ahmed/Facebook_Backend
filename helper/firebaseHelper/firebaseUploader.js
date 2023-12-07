@@ -7,8 +7,7 @@ const {
 } = require("firebase/storage");
 const firebase = require("firebase/app");
 const { firebaseConfig } = require("../../Config/firebaseConfig/firebase");
-const { imageCompressor } = require("../imageCompressor/imageCompressor");
-const { response } = require("../../utils/response");
+const imageCompressor = require("../imageHelper/imageCompressor");
 
 firebase.initializeApp(firebaseConfig);
 
@@ -35,4 +34,4 @@ const firebaseUploder = async (folder, image) => {
   }
 };
 
-module.exports = { firebaseUploder };
+module.exports = firebaseUploder;

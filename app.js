@@ -2,84 +2,63 @@ require("dotenv").config();
 const express = require("express");
 const connectDb = require("./Config/dbConfig/connect");
 const cors = require("cors");
-// const cookieParser = require("cookie-parser");
 const { createServer } = require("http");
-const { Server } = require("socket.io");
+// const { Server } = require("socket.io"); /// Future use
 
 const path = require("path");
-// const multer = require("multer");
 
 // Routes
-const { router } = require("./Routers/router");
-const { userRouter } = require("./Routers/userRouter");
-const { isauthenticated } = require("./Middlewares/auth");
-const { postRouter } = require("./Routers/postRouter");
-const { errorHandler } = require("./Middlewares/errorHandler/errorHandler");
+const userRouter = require("./Routers/userRouter");
+const postRouter = require("./Routers/postRouter");
+
+//Middlewares
+const { isauthenticated, errorHandler } = require("./Middlewares/index");
 // const { rateLimit } = require("express-rate-limit");
 // middelware
 
 const app = express();
 const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: "*",
-  },
-});
-let user = 1;
-io.on("connection", (socket) => {
-  // socket.emit("connection", socket.id, "connected to server");
-  // socket.emit("connection", user++, {
-  //   message: `total user ${user}`,
-  // });
-  socket.on("join", function (data) {});
 
-  socket.on("disconnect", (message) => {
-    console.log("Client disconnected with id: ", message);
-  });
-});
+// socket io
+// const io = new Server(httpServer, {
+//   cors: {
+//     origin: "*",
+//   },
+// });
+// io.on("connection", (socket) => {
+//   // socket.emit("connection", socket.id, "connected to server");
+//   // socket.emit("connection", user++, {
+//   //   message: `total user ${user}`,
+//   // });
+//   socket.on("join", function (data) {});
+
+//   socket.on("disconnect", (message) => {
+//     console.log("Client disconnected with id: ", message);
+//   });
+// });
 
 const PORT = process?.env?.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3003",
-      "http://192.168.0.228:3000",
-      "http://192.168.0.130:3000",
-      "http://192.168.0.71:3000",
-      "http://192.168.0.130:3003",
-      "http://192.168.0.234:3000",
-      "*",
-    ],
+    origin: "*",
     credentials: true,
   })
 );
-
-// app.use(cookieParser());
-
-// const limiter = rateLimit({
-//   windowMs: 60 * 1000, // 1 minutes
-//   limit: 400, //Limit
-//   headers: true,
-//   message: `Your can do 350 request per min`,
-// });
-
-// app.use(limiter);
 
 // Api Call
 
 app.get("/", (req, res) => {
   res.send("Welcome to Our Faceback app using MERN");
 });
-app.use("/todos", isauthenticated, router);
 app.use("/users", userRouter);
 app.use("/posts", isauthenticated, postRouter);
 app.use(express.static(path.join(__dirname, "public/images")));
 app.use(express.static(path.join(__dirname, "public/Postimages")));
 app.use(errorHandler);
-app.use(require("express-status-monitor")());
+// app.use(require("express-status-monitor")()); // For mointer the memory usage
+
 // Server Function
 
 httpServer.listen(PORT, () => {

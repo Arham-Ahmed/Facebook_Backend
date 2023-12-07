@@ -1,5 +1,4 @@
-const Joi = require("joi");
-const { response } = require("../../../utils/response");
+const { response } = require("../../utils/response");
 
 const validator = (schema) => {
   return (req, res, next) => {
@@ -13,6 +12,7 @@ const validator = (schema) => {
           message: "Error",
           payload: error?.details,
         });
+      next();
     } catch (e) {
       return response({
         res: res,
@@ -22,8 +22,7 @@ const validator = (schema) => {
         payload: e.message,
       });
     }
-    next();
   };
 };
 
-module.exports = { validator };
+module.exports = validator;

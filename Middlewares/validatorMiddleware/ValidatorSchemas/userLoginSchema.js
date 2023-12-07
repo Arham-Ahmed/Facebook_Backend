@@ -13,4 +13,4 @@ const userLoginSchema = Joi.object().keys({
     .regex(/^[^\s]+$/)
     .required(),
 });
-module.exports = { userLoginSchema };
+module.exports = userLoginSchema;

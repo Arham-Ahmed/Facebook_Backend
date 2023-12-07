@@ -1,7 +1,7 @@
 const sharp = require("sharp");
 
-const imageCompressor = async (req) => {
-  const convertedimage = sharp(req?.buffer)
+const imageCompressor = async (image) => {
+  const convertedimage = sharp(image?.buffer)
     .webp({
       quality: 20,
       compressionLevel: 9,
@@ -10,4 +10,4 @@ const imageCompressor = async (req) => {
   return convertedimage;
 };
 
-module.exports = { imageCompressor };
+module.exports = imageCompressor;

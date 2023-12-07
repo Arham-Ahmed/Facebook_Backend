@@ -8,21 +8,15 @@ const {
   LogoutUser,
   loginUser,
 } = require("../Controllers/userController");
-const { isauthenticated } = require("../Middlewares/auth");
-const { upload } = require("../Middlewares/multermiddleware/upload");
-// const { multi } = require("../Middlewares/multermiddleware/multiupload"); /// no more use
+
 const {
   validator,
-} = require("../Middlewares/validatorMiddleware/ValidatorFunc/Validator");
-const {
   userLoginSchema,
-} = require("../Middlewares/validatorMiddleware/ValidatorSchemas/userLoginSchema");
-const {
   userUpdateSchema,
-} = require("../Middlewares/validatorMiddleware/ValidatorSchemas/userUpdateValidator");
-const {
   userSignupSchema,
-} = require("../Middlewares/validatorMiddleware/ValidatorSchemas/userSignupSchema");
+  isauthenticated,
+  upload,
+} = require("../Middlewares/index");
 
 const userRouter = express.Router();
 
@@ -43,4 +37,4 @@ userRouter
     updateUser
   );
 
-module.exports = { userRouter };
+module.exports = userRouter;

@@ -23,4 +23,4 @@ const upload = (fieldname, maxcount) => {
   };
 };
 
-module.exports = { upload };
+module.exports = upload;
