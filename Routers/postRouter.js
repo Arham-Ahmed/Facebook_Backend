@@ -6,7 +6,12 @@ const {
   getallUserPost,
 } = require("../Controllers/postController");
 
-const { isauthenticated, upload } = require("../Middlewares/index");
+const {
+  isauthenticated,
+  upload,
+  createPostSchema,
+  validator,
+} = require("../Middlewares/index");
 const {
   Like,
   CreateComment,
@@ -19,7 +24,11 @@ postRouter.use(isauthenticated);
 postRouter
   .get("/", getallPost)
   .get("/user-post", getallUserPost)
-  .post("/create-post", upload("imageUrl", 6), createPost)
+  .post(
+    "/create-post",
+    [upload("imageUrl", 6), validator(createPostSchema)],
+    createPost
+  )
   .post("/like/:id", Like)
   .post("/comment", CreateComment)
   .delete("/delete-post/:id", removePost)
