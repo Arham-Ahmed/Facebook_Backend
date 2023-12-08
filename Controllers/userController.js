@@ -1,6 +1,5 @@
 const Users = require("../Models/User");
 const bcryptjs = require("bcryptjs");
-const jwt = require("jsonwebtoken");
 const tokenModel = require("../Models/Token");
 const { response } = require("../utils/response");
 const moment = require("moment");
@@ -10,6 +9,8 @@ const {
   firebaseImageDelete,
   imageMimetype,
   imagePathMaker,
+  userChecker,
+  jwtGenrator,
 } = require("../helper");
 // Initialize Firebase
 
@@ -85,15 +86,7 @@ const loginUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
     const user = await Users?.findOne({ email: email })?.select("+password");
-    if (!user || user?.isDelete) {
-      return response({
-        res: res,
-        statusCode: 401,
-        sucessBoolean: false,
-        message: "User not found",
-      });
-    }
-
+    userChecker(user, res);
     const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch)
       return response({
@@ -103,55 +96,45 @@ const loginUser = async (req, res) => {
         message: "Invalid Credential",
       });
 
-    jwt?.sign(
-      { _id: user?._id },
-      process?.env?.JWTSCERET,
-      {
-        expiresIn: "90d",
-      },
-      async (err, token) => {
-        if (err) {
-          return response({
-            res: res,
-            statusCode: 500,
-            sucessBoolean: false,
-            message: "Internal server error",
-          });
-        } else {
-          const newToken = new tokenModel({
-            token: token,
-            Device: req?.headers["user-agent"],
-            user_id: user?._id,
-          });
-          if (!newToken)
-            return response({
-              res: res,
-              statusCode: 500,
-              sucessBoolean: false,
-              message: "Internal server error",
-            });
+    const token = jwtGenrator(user);
+    if (!token)
+      return response({
+        res: res,
+        statusCode: 500,
+        sucessBoolean: false,
+        message: "Internal server error",
+      });
 
-          await newToken?.save();
-          return response({
-            res: res,
-            statusCode: 200,
-            sucessBoolean: true,
-            message: "Login sucessfully",
-            payload: {
-              user: user,
-              token: token,
-            },
-          });
-        }
-      }
-    );
+    // tokenSave in database
+    const newToken = new tokenModel({
+      token: token,
+      Device: req?.headers["user-agent"],
+      user_id: user?._id,
+    });
+    if (!newToken)
+      return response({
+        res: res,
+        statusCode: 500,
+        sucessBoolean: false,
+        message: "Internal server error",
+      });
+    await newToken?.save();
+    return response({
+      res: res,
+      statusCode: 200,
+      sucessBoolean: true,
+      message: "Login sucessfully",
+      payload: {
+        user: user,
+        token: token,
+      },
+    });
   } catch (e) {
     return response({
       res: res,
-      statusCode: 500,
+      statusCode: e?.statusCode || 500,
       sucessBoolean: false,
-      message: "Error",
-      payload: e.message,
+      message: e?.message || "Internal server error",
     });
   }
 };
