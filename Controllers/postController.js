@@ -17,6 +17,14 @@ const createPost = async (req, res) => {
       caption: req?.body?.caption,
       owner: req.user?._id,
     };
+    if (!Object.keys(req?.body).length) {
+      return response({
+        res: res,
+        statusCode: 200,
+        sucessBoolean: false,
+        message: "Atleast 1 feild present",
+      });
+    }
     const post = new Post(newPost);
     if (!post)
       return response({
@@ -140,7 +148,7 @@ const getallUserPost = async (req, res) => {
     const posts = await Post?.find({ owner: req.user?._id })
 
       ?.populate(populateValue)
-      ?.sort(createdAt);
+      ?.sort("-createdAt");
     if (!posts?.length)
       return response({
         res: res,

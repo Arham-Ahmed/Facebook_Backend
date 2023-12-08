@@ -4,7 +4,8 @@ const imageMimetype = require("./imageHelper/imageMimeType");
 const imagePathMaker = require("./imageHelper/imagePathMaker");
 const imageCompressor = require("./imageHelper/imageCompressor");
 const userChecker = require("./normalHelper/userChecker");
-const jwtGenrator = require("./normalHelper/jwtGenrator");
+const jwtGenrator = require("./jwtHelper/jwtGenrator");
+const jwtVerifier = require("./jwtHelper/jwtVerifier");
 
 module.exports = {
   firebaseImageDelete,
@@ -14,4 +15,5 @@ module.exports = {
   imageCompressor,
   userChecker,
   jwtGenrator,
+  jwtVerifier,
 };

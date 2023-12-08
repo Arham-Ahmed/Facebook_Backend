@@ -149,7 +149,7 @@ const LogoutUser = async (req, res) => {
         res: res,
         statusCode: 401,
         sucessBoolean: false,
-        message: "Unauthorized !",
+        message: "Unauthorized !!",
       });
     const databaseToken = await tokenModel.findOne({ token: token });
     if (!databaseToken)
@@ -397,10 +397,9 @@ const userCall = async (req, res) => {
   } catch (e) {
     return response({
       res: res,
-      statusCode: 500,
+      statusCode: e?.statusCode || 500,
       sucessBoolean: false,
-      message: "Error",
-      payload: e.message,
+      message: e?.message || "Internal server error",
     });
   }
 };
