@@ -4,6 +4,7 @@ const PostScehma = new mongoose.Schema(
   {
     caption: {
       type: String,
+      minLength: [0, "Caption must be Shorter than 0 Character"],
       maxLength: [150, "Caption must be Shorter than 150 Character"],
     },
     imageUrl: [{ type: String }],
