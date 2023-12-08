@@ -6,7 +6,6 @@ const createPostSchema = require("./validatorMiddleware/ValidatorSchemas/createP
 const userLoginSchema = require("./validatorMiddleware/ValidatorSchemas/userLoginSchema");
 const userSignupSchema = require("./validatorMiddleware/ValidatorSchemas/userSignupSchema");
 const userUpdateSchema = require("./validatorMiddleware/ValidatorSchemas/userUpdateValidator");
-const idValidator = require("./validatorMiddleware/idValidator");
 
 module.exports = {
   errorHandler,
@@ -17,5 +16,4 @@ module.exports = {
   userUpdateSchema,
   isauthenticated,
   createPostSchema,
-  idValidator,
 };

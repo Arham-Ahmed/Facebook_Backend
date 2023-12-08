@@ -6,4 +6,4 @@ const response = ({ res, statusCode, sucessBoolean, message, payload }) => {
   });
 };
 
-module.exports = { response };
+module.exports = response;

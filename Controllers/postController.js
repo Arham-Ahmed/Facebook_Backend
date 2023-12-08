@@ -1,4 +1,4 @@
-const { idValidator } = require("../Middlewares");
+const { isValidObjectId } = require("mongoose");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
 const {
@@ -6,9 +6,10 @@ const {
   firebaseImageDelete,
   imagePathMaker,
   imageMimetype,
+  userChecker,
 } = require("../helper/index");
 
-const { response } = require("../utils/response");
+const response = require("../utils/response");
 
 ////////////////////////////////// For Creating Post /////////////////////////////
 const createPost = async (req, res) => {
@@ -17,6 +18,7 @@ const createPost = async (req, res) => {
       caption: req?.body?.caption,
       owner: req.user?._id,
     };
+
     if (!Object.keys(req?.body).length) {
       return response({
         res: res,
@@ -25,6 +27,7 @@ const createPost = async (req, res) => {
         message: "Atleast 1 feild present",
       });
     }
+
     const post = new Post(newPost);
     if (!post)
       return response({
@@ -33,14 +36,8 @@ const createPost = async (req, res) => {
         sucessBoolean: false,
         message: "Some error on creating post",
       });
-    const user = await User?.findById(req.user?._id);
-    if (!user)
-      return response({
-        res: res,
-        statusCode: 500,
-        sucessBoolean: false,
-        message: "User not found",
-      });
+    const user = await User.findById(req.user?._id);
+    userChecker(user, res);
     user?.posts?.push(post?._id);
     await user?.save();
 
@@ -50,11 +47,11 @@ const createPost = async (req, res) => {
         imageMimetype(img, res);
         const image = req?.files?.imageUrl[index];
         // Firebase uploader
-        const postdownloadUrl = firebaseUploder("/post_images", image);
-        return postdownloadUrl;
+
+        return firebaseUploder("/post_images", image);
       });
-      const allPromis = await Promise.all(imageArray);
-      post.imageUrl.push(...allPromis);
+      // const allPromis = ;
+      post?.imageUrl?.push(...(await Promise.all(imageArray)));
     }
     await post.save();
     return response({
@@ -94,9 +91,7 @@ const getallPost = async (req, res) => {
     },
   ];
   try {
-    let posts = await Post?.find({})
-      ?.populate(populateValue)
-      ?.sort("-createdAt");
+    let posts = await Post.find({}).populate(populateValue); //.sort("-createdAt");
     if (!posts?.length)
       return response({
         res: res,
@@ -104,7 +99,9 @@ const getallPost = async (req, res) => {
         sucessBoolean: false,
         message: "No post found",
       });
-    const allPosts = posts.filter((post) => post?.owner?.isDelete === null);
+    const allPosts = posts
+      .filter((post) => post?.owner?.isDelete === null)
+      .sort((a, b) => b.createdAt - a.createdAt);
 
     return response({
       res: res,
@@ -145,10 +142,10 @@ const getallUserPost = async (req, res) => {
         select: ["name", "profile_photo", "createdAt"],
       },
     ];
-    const posts = await Post?.find({ owner: req.user?._id })
+    const posts = await Post.find({ owner: req.user?._id })
 
-      ?.populate(populateValue)
-      ?.sort("-createdAt");
+      .populate(populateValue)
+      .sort("-createdAt");
     if (!posts?.length)
       return response({
         res: res,
@@ -178,8 +175,8 @@ const getallUserPost = async (req, res) => {
 const removePost = async (req, res) => {
   try {
     const { id } = req?.params;
-    if (!idValidator(id))
-      return response({
+    if (!id || !isValidObjectId(id))
+      response({
         res: res,
         statusCode: 400,
         sucessBoolean: true,
@@ -189,57 +186,27 @@ const removePost = async (req, res) => {
     if (!post)
       return response({
         res: res,
-        statusCode: 202,
+        statusCode: 200,
         sucessBoolean: true,
         message: "No post found",
       });
-    const deletedImages = post?.imageUrl?.map(async (image, index) => {
+    const deletedImages = post?.imageUrl?.map((image, index) => {
       const deleteImagPath = imagePathMaker(image);
       return firebaseImageDelete(deleteImagPath);
     });
-    await Promise.all(deletedImages)
-      .then(async () => {
-        const user = await User?.findById(req.user?.id);
-        if (!user) {
-          return response({
-            res: res,
-            statusCode: 500,
-            sucessBoolean: false,
-            message: "User not found",
-          });
-        }
-        await Post?.findByIdAndDelete(id);
-        user?.posts?.filter((post) => post != post._id);
-        await user?.save();
+    const user = await User?.findById(req.user?.id);
+    userChecker(user, res);
+    await Post.findByIdAndDelete(id);
+    user?.posts?.filter((post) => post.toString() != post._id.toString());
+    await user?.save();
+    await Promise.all(deletedImages);
 
-        return response({
-          res: res,
-          statusCode: 200,
-          sucessBoolean: true,
-          message: "Post deleted sucessfully",
-        });
-      })
-      .catch(async (error) => {
-        const user = await User?.findById(req.user.id);
-        if (!user) {
-          return response({
-            res: res,
-            statusCode: 500,
-            sucessBoolean: false,
-            message: "User not found",
-          });
-        }
-        await Post?.findByIdAndDelete(id);
-        user?.posts?.filter((post) => post != post._id);
-        await user?.save();
-        return response({
-          res: res,
-          statusCode: 202,
-          sucessBoolean: true,
-          message: "Request fullfield but error ocuured",
-          payload: error?.message,
-        });
-      });
+    return response({
+      res: res,
+      statusCode: 200,
+      sucessBoolean: true,
+      message: "Post deleted sucessfully",
+    });
   } catch (e) {
     return response({
       res: res,

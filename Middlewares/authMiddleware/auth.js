@@ -1,55 +1,38 @@
 require("dotenv").config({ path: "../Secrets/.env" });
 const Users = require("../../Models/User");
 const tokenModel = require("../../Models/Token");
-const { response } = require("../../utils/response");
-const { jwtVerifier } = require("../../helper");
+const response = require("../../utils/response");
+const { jwtVerifier, userChecker } = require("../../helper");
 
 const isauthenticated = async (req, res, next) => {
   try {
     const authorization = req?.headers?.authorization;
-    if (!authorization)
+
+    const token = authorization && authorization?.split(" ")[1];
+
+    if (!authorization || !token)
       return response({
         res: res,
         statusCode: 401,
         sucessBoolean: false,
         message: "Unauthorized !", /// or No authorization token found confused
-      });
-    const token = authorization.split(" ")[1];
-    if (!token)
-      return response({
-        res: res,
-        statusCode: 401,
-        sucessBoolean: false,
-        message: "Unauthorized !", /// or No authorization token found confused
-      });
-    const databaseToken = await tokenModel.findOne({ token: token });
-    if (!databaseToken)
-      return response({
-        res: res,
-        statusCode: 401,
-        sucessBoolean: false,
-        message: "Un Authorized",
       });
 
-    if (databaseToken?.expireAt < Date.now())
+    const databaseToken = await tokenModel.findOne({ token: token });
+
+    if (!databaseToken || databaseToken?.expireAt < Date.now())
       return response({
         res,
         statusCode: 401,
         sucessBoolean: false,
-        message: "Unauthorized !",
+        message: "Unauthorized -- Login again",
       });
 
     const decode = jwtVerifier(databaseToken, res);
     const user = await Users.findById(decode?._id);
-    if (!user)
-      return response({
-        res: res,
-        statusCode: 401,
-        sucessBoolean: false,
-        message: "User not found",
-      });
+    userChecker(user, res);
     req.user = user;
-    req.token = token; /// for Future Use
+    req.token = token;
     next();
   } catch (e) {
     return response({

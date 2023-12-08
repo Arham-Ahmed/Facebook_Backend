@@ -29,11 +29,11 @@ userRouter
     createUser
   )
   .post("/login", validator(userLoginSchema), loginUser)
-  .get("/logout", isauthenticated, LogoutUser)
+  .post("/logout", isauthenticated, LogoutUser)
   .delete("/delete", isauthenticated, removeUser)
   .put(
-    "/update-user",
-    [isauthenticated, upload("profile_photo", 1), validator(userUpdateSchema)],
+    "/updateUser",
+    [isauthenticated, validator(userUpdateSchema), upload("profile_photo", 1)],
     updateUser
   );
 
