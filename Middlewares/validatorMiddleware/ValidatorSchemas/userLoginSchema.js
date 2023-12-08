@@ -1,6 +1,5 @@
 const Joi = require("joi");
 const userLoginSchema = Joi.object().keys({
-  id: Joi.string().hex().length(24),
   email: Joi.string()
     .email()
     .trim(true)

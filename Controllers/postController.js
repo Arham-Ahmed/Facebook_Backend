@@ -1,3 +1,4 @@
+const { idValidator } = require("../Middlewares");
 const Post = require("../Models/Post");
 const User = require("../Models/User");
 const {
@@ -169,6 +170,13 @@ const getallUserPost = async (req, res) => {
 const removePost = async (req, res) => {
   try {
     const { id } = req?.params;
+    if (!idValidator(id))
+      return response({
+        res: res,
+        statusCode: 400,
+        sucessBoolean: true,
+        message: "Invalid post id",
+      });
     const post = await Post?.findOne({ _id: id });
     if (!post)
       return response({

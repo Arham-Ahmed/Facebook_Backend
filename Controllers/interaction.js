@@ -2,11 +2,13 @@ const { response } = require("../utils/response");
 const Comment = require("../Models/Comment");
 const Post = require("../Models/Post");
 const UserModel = require("../Models/User");
+const { idValidator } = require("../Middlewares");
 
 const Like = async (req, res) => {
   try {
     const postId = req?.params?.id;
-    if (!postId)
+
+    if (!postId || !idValidator(postId))
       return response({
         res: res,
         statusCode: 400,
@@ -147,7 +149,7 @@ const CreateComment = async (req, res) => {
 const DeleteComment = async (req, res) => {
   try {
     const { id } = req?.params;
-    if (!id)
+    if (!id || !idValidator(id))
       return response({
         res: res,
         statusCode: 422,
