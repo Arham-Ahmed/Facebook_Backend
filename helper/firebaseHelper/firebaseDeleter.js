@@ -1,13 +1,14 @@
 const firebase = require("firebase/app");
 const { ref, deleteObject, getStorage } = require("firebase/storage");
 const { firebaseConfig } = require("../../Config/firebaseConfig/firebase");
+const userModel = require("../../Models/User");
 
 firebase.initializeApp(firebaseConfig);
 const storage = getStorage();
 
 const firebaseImageDelete = async (deleteImagPath) => {
   const deletRef = ref(storage, deleteImagPath);
-  await deleteObject(deletRef);
+  return await deleteObject(deletRef);
 };
 
 module.exports = firebaseImageDelete;

@@ -8,7 +8,7 @@ const Like = async (req, res) => {
   try {
     const postId = req?.params?.id;
 
-    if (!postId || !idValidator(postId))
+    if (!idValidator(postId))
       return response({
         res: res,
         statusCode: 400,
@@ -154,7 +154,7 @@ const DeleteComment = async (req, res) => {
         res: res,
         statusCode: 422,
         sucessBoolean: false,
-        message: "Cannot Delete Some Issue with your request",
+        message: "inavalid comment id",
       });
 
     const comment = await Comment?.findById(id);

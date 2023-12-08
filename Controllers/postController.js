@@ -185,20 +185,10 @@ const removePost = async (req, res) => {
         sucessBoolean: true,
         message: "No post found",
       });
-    if (post?.owner?.toHexString() !== req.user?.id) {
-      return response({
-        res: res,
-        statusCode: 400,
-        sucessBoolean: false,
-        message: "Your are not login with this account",
-      });
-    }
-
     const deletedImages = post?.imageUrl?.map(async (image, index) => {
       const deleteImagPath = imagePathMaker(image);
       return firebaseImageDelete(deleteImagPath);
     });
-
     await Promise.all(deletedImages)
       .then(async () => {
         const user = await User?.findById(req.user?.id);
