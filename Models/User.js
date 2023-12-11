@@ -35,6 +35,13 @@ const UserSchema = new mongoose.Schema(
       type: String,
       min: [11, "Plz Enter a valid number"],
     },
+    bio: {
+      type: String,
+    },
+    liveIn: {
+      type: String,
+    },
+    socialLinks: [String],
     posts: [
       {
         type: mongoose.Schema.Types.ObjectId,

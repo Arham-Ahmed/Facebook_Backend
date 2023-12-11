@@ -3,7 +3,7 @@ const express = require("express");
 const connectDb = require("./Config/dbConfig/connect");
 const cors = require("cors");
 const { createServer } = require("http");
-// const { Server } = require("socket.io"); /// Future use
+const { Server } = require("socket.io"); /// Future use
 
 const path = require("path");
 
@@ -20,26 +20,25 @@ const app = express();
 const httpServer = createServer(app);
 
 // socket io
-// const io = new Server(httpServer, {
-//   cors: {
-//     origin: "*",
-//   },
-// });
-// io.on("connection", (socket) => {
-//   // socket.emit("connection", socket.id, "connected to server");
-//   // socket.emit("connection", user++, {
-//   //   message: `total user ${user}`,
-//   // });
-//   socket.on("join", function (data) {});
+const io = new Server(httpServer, {
+  cors: {
+    origin: "*",
+  },
+});
+io.on("connection", (socket) => {
+  socket.emit("connection", `${socket.id} connected to server`);
+  socket.on("join", function (data) {
+    console.log(data);
+  });
 
-//   socket.on("disconnect", (message) => {
-//     console.log("Client disconnected with id: ", message);
-//   });
-// });
+  socket.on("disconnect", (message) => {
+    console.log("Client disconnected with id: ", message);
+  });
+});
 
 const PORT = process?.env?.PORT || 5000;
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(
   cors({
     origin: "*",

@@ -19,8 +19,11 @@ const userUpdateSchema = Joi.object().keys({
     .length(10)
     .pattern(/[6-9]{1}[0-9]{9}/)
     .optional(),
-  profile_photo: Joi.string().optional(),
-  cover_photo: Joi.string().optional(),
+  bio: Joi.string().min(0).max(150).optional(),
+  liveIn: Joi.string().min(0).max(20).optional(),
+  socialLinks: Joi.string().uri().optional(),
+  profile_photo: Joi.string().optional().uri(),
+  cover_photo: Joi.string().optional().uri(),
 });
 // .unknown(true);
 

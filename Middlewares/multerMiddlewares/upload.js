@@ -14,7 +14,7 @@ const upload = (fields) => {
           res: res,
           statusCode: 413,
           sucessBoolean: false,
-          message: "MulterError limit exceed",
+          message: "MulterError",
           payload: error,
         });
       } else {
