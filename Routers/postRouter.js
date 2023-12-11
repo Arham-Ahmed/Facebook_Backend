@@ -26,7 +26,7 @@ postRouter
   .get("/user-post", getallUserPost)
   .post(
     "/create-post",
-    [upload("imageUrl", 6), validator(createPostSchema)],
+    [upload([{ name: "imageUrl", maxcount: 6 }]), validator(createPostSchema)],
     createPost
   )
   .post("/like/:id", Like)

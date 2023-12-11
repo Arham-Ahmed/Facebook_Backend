@@ -1,17 +1,18 @@
 const multer = require("multer");
 const response = require("../../utils/response");
-const upload = (fieldname, maxcount) => {
+const storage = multer.memoryStorage();
+const upload = (fields) => {
   return (req, res, next) => {
-    multer({ storage: multer.memoryStorage() }).fields([
-      {
-        name: fieldname,
-        maxCount: maxcount,
-      },
-    ])(req, res, (error) => {
+    multer({ storage: storage }).fields(
+      fields?.map((fieldName) => ({
+        name: fieldName.name,
+        maxCount: fieldName.maxcount,
+      }))
+    )(req, res, (error) => {
       if (error) {
         return response({
           res: res,
-          statusCode: 500,
+          statusCode: 413,
           sucessBoolean: false,
           message: "MulterError limit exceed",
           payload: error,

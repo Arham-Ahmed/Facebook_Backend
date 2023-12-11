@@ -25,7 +25,13 @@ userRouter
   .get("/user", isauthenticated, userCall)
   .post(
     "/register",
-    [upload("profile_photo", 1), validator(userSignupSchema)],
+    [
+      upload([
+        { name: "profile_photo", maxcount: 1 },
+        { name: "cover_photo", maxcount: 1 },
+      ]),
+      validator(userSignupSchema),
+    ],
     createUser
   )
   .post("/login", validator(userLoginSchema), loginUser)
@@ -33,7 +39,14 @@ userRouter
   .delete("/delete", isauthenticated, removeUser)
   .put(
     "/updateUser",
-    [isauthenticated, validator(userUpdateSchema), upload("profile_photo", 1)],
+    [
+      isauthenticated,
+      upload([
+        { name: "profile_photo", maxcount: 1 },
+        { name: "cover_photo", maxcount: 1 },
+      ]),
+      validator(userUpdateSchema),
+    ],
     updateUser
   );
 

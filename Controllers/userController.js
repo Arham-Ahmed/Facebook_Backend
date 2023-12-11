@@ -5,12 +5,12 @@ const response = require("../utils/response");
 const moment = require("moment");
 
 const {
-  firebaseUploder,
   firebaseImageDelete,
-  imageMimetype,
+
   imagePathMaker,
   userChecker,
   jwtGenrator,
+  imageUploader,
 } = require("../helper");
 // Initialize Firebase
 
@@ -38,21 +38,13 @@ const createUser = async (req, res) => {
           sucessBoolean: false,
           message: "Some error occur on creating account",
         });
-      if (req?.files?.profile_photo?.length) {
-        const img = req?.files?.profile_photo[0];
-        imageMimetype(img, res);
-        // firebase Image Uploading ...
-        if (req?.files?.profile_photo?.length > 1) {
-          return response({
-            res: res,
-            statusCode: 400,
-            sucessBoolean: false,
-            message: "You can Upload 1 image at a time",
-          });
-        }
-        const image = req?.files?.profile_photo[0];
-        const downloadUrl = await firebaseUploder("profile_photo", image);
-        newUser?.profile_photo.push(downloadUrl);
+
+      if (req?.files) {
+        await Promise.all(
+          Object?.keys(req.files)?.map((key) => {
+            return imageUploader(key, req, newUser);
+          })
+        );
       }
       await newUser.save();
       return response({
@@ -87,7 +79,7 @@ const loginUser = async (req, res) => {
     const { email, password } = req?.body;
     const user = await Users?.findOne({ email: email })?.select("+password");
     userChecker(user, res);
-    const isMatch = bcryptjs?.compare(password, user?.password);
+    const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch)
       return response({
         res: res,
@@ -185,9 +177,10 @@ const removeUser = async (req, res) => {
       "+password",
       "+isDelete",
     ]);
+
     userChecker(user, res);
 
-    const isMatch = bcryptjs?.compare(password, user?.password);
+    const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch) {
       return response({
         res: res,
@@ -197,7 +190,11 @@ const removeUser = async (req, res) => {
       });
     }
 
-    const deletedImages = user?.profile_photo?.map(async (image, index) => {
+    const deletedProfileImages = user?.profile_photo?.map(async (image) => {
+      const deleteImagePath = imagePathMaker(image);
+      return firebaseImageDelete(deleteImagePath, res);
+    });
+    const deletedCoverImages = user?.cover_photo?.map(async (image) => {
       const deleteImagePath = imagePathMaker(image);
       return firebaseImageDelete(deleteImagePath, res);
     });
@@ -224,7 +221,8 @@ const removeUser = async (req, res) => {
       });
     databaseToken.expireAt = Date.now();
     await databaseToken.save();
-    await Promise.all(deletedImages);
+    await Promise.all(deletedProfileImages);
+    await Promise.all(deletedCoverImages);
 
     return response({
       res: res,
@@ -260,23 +258,13 @@ const updateUser = async (req, res) => {
         message: "Some Error Occured",
       });
 
-    if (req?.files?.profile_photo) {
-      const img = req?.files?.profile_photo[0];
-      imageMimetype(img, res);
-
-      if (req?.files?.profile_photo?.length > 1) {
-        return response({
-          res: res,
-          statusCode: 400,
-          sucessBoolean: false,
-          message: `cant upload more than 1 image`,
-        });
-      }
-      const image = req?.files?.profile_photo[0];
-      const downloadUrl = await firebaseUploder("profile_photo", image);
-      UpdatedUser?.profile_photo?.push(downloadUrl);
+    if (req?.files) {
+      await Promise.all(
+        Object?.keys(req.files)?.map(async (key) => {
+          return imageUploader(key, req, UpdatedUser);
+        })
+      );
     }
-
     await UpdatedUser?.save();
 
     return response({
