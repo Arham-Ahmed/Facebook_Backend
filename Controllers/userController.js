@@ -6,7 +6,6 @@ const moment = require("moment");
 
 const {
   firebaseImageDelete,
-
   imagePathMaker,
   userChecker,
   jwtGenrator,
@@ -39,7 +38,7 @@ const createUser = async (req, res) => {
           message: "Some error occur on creating account",
         });
 
-      if (req?.files) {
+      if (req?.files && Object.keys(req?.files).length > 0) {
         await Promise.all(
           Object?.keys(req.files)?.map((key) => {
             return imageUploader(key, req, newUser);
@@ -243,36 +242,31 @@ const removeUser = async (req, res) => {
 ///////////////////////////////////////////// For Updating Users /////////////////////////////////////
 const updateUser = async (req, res) => {
   try {
-    const update = req?.body;
-    const UpdatedUser = await Users?.findOneAndUpdate(
-      { _id: req.user?._id },
-      update,
-      { new: true }
-    );
+    const { email, name, bio, liveIn, socialLinks } = req?.body;
+    const user = await Users?.findOne({ _id: req.user?._id });
+    userChecker(user);
+    user.set({
+      email: email,
+      name: name,
+      bio: bio,
+      liveIn: liveIn,
+      socialLinks: socialLinks,
+    });
 
-    if (!UpdatedUser)
-      return response({
-        res: res,
-        statusCode: 500,
-        sucessBoolean: false,
-        message: "Some Error Occured",
-      });
-
-    if (req?.files) {
+    if (Object.keys(req?.files)?.length >= 1) {
       await Promise.all(
         Object?.keys(req.files)?.map(async (key) => {
-          return imageUploader(key, req, UpdatedUser);
+          return imageUploader(key, req, user);
         })
       );
     }
-    await UpdatedUser?.save();
-
+    await user?.save();
     return response({
       res: res,
       statusCode: 200,
       sucessBoolean: true,
       message: "Updated sucessfully",
-      payload: UpdatedUser,
+      payload: user,
     });
   } catch (e) {
     return response({
@@ -285,7 +279,6 @@ const updateUser = async (req, res) => {
   }
 };
 //////////////////////////////////////////// For Getting All Users ////////////////////////////////////
-
 const getallUsers = async (req, res) => {
   try {
     const { email, name } = req?.query;
@@ -323,6 +316,7 @@ const getallUsers = async (req, res) => {
     });
   }
 };
+//////////////////////////////////////////// Me OR User Call /////////////////////////////////////////
 const userCall = async (req, res) => {
   try {
     const user_id = req.user?._id;
@@ -348,7 +342,8 @@ const userCall = async (req, res) => {
     });
   }
 };
-
+//////////////////////////////////////////// Friend Request  ////////////////////////////////////////
+const friendReq = () => {};
 module.exports = {
   createUser,
   getallUsers,
