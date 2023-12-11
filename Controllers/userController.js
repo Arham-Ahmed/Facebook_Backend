@@ -246,11 +246,11 @@ const updateUser = async (req, res) => {
     const user = await Users?.findOne({ _id: req.user?._id });
     userChecker(user);
     user.set({
-      email: email,
-      name: name,
-      bio: bio,
-      liveIn: liveIn,
-      socialLinks: socialLinks,
+      email,
+      name,
+      bio,
+      liveIn,
+      socialLinks,
     });
 
     if (Object.keys(req?.files)?.length >= 1) {
