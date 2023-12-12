@@ -8,7 +8,7 @@ const validator = (schema) => {
         return response({
           res: res,
           statusCode: 400,
-          sucessBoolean: false,
+          successBoolean: false,
           message: "Error",
           payload: error?.details,
         });
@@ -17,7 +17,7 @@ const validator = (schema) => {
       return response({
         res: res,
         statusCode: 500,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Error",
         payload: e.message,
       });

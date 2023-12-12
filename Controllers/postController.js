@@ -1,12 +1,12 @@
 const { isValidObjectId } = require("mongoose");
 const Post = require("../Models/Post");
-const User = require("../Models/User");
+const userModel = require("../Models/user");
 const {
   firebaseUploder,
   firebaseImageDelete,
   imagePathMaker,
   imageMimetype,
-  userChecker,
+  validateUserPresence,
 } = require("../helper/index");
 
 const response = require("../utils/response");
@@ -23,7 +23,7 @@ const createPost = async (req, res) => {
       return response({
         res: res,
         statusCode: 200,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Atleast 1 feild present",
       });
     }
@@ -33,11 +33,11 @@ const createPost = async (req, res) => {
       return response({
         res: res,
         statusCode: 500,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Some error on creating post",
       });
-    const user = await User.findById(req.user?._id);
-    userChecker(user, res);
+    const user = await userModel.findById(req.user?._id);
+    validateUserPresence(user, res);
     user?.posts?.push(post?._id);
     await user?.save();
 
@@ -64,7 +64,7 @@ const createPost = async (req, res) => {
     return response({
       res: res,
       statusCode: e.statusCode || 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -96,7 +96,7 @@ const getallPost = async (req, res) => {
       return response({
         res: res,
         statusCode: 404,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "No post found",
       });
     const allPosts = posts
@@ -106,7 +106,7 @@ const getallPost = async (req, res) => {
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: true,
+      successBoolean: true,
       message: "All posts",
       payload: allPosts,
     });
@@ -114,7 +114,7 @@ const getallPost = async (req, res) => {
     return response({
       res: res,
       statusCode: 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -150,13 +150,13 @@ const getallUserPost = async (req, res) => {
       return response({
         res: res,
         statusCode: 200,
-        sucessBoolean: true,
+        successBoolean: true,
         message: "No post available",
       });
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: true,
+      successBoolean: true,
       message: "All posts of User are",
       payload: posts,
     });
@@ -164,7 +164,7 @@ const getallUserPost = async (req, res) => {
     return response({
       res: res,
       statusCode: 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -179,7 +179,7 @@ const removePost = async (req, res) => {
       response({
         res: res,
         statusCode: 400,
-        sucessBoolean: true,
+        successBoolean: true,
         message: "Invalid post id",
       });
     const post = await Post?.findOne({ _id: id });
@@ -187,15 +187,15 @@ const removePost = async (req, res) => {
       return response({
         res: res,
         statusCode: 200,
-        sucessBoolean: true,
+        successBoolean: true,
         message: "No post found",
       });
     const deletedImages = post?.imageUrl?.map((image, index) => {
       const deleteImagPath = imagePathMaker(image);
       return firebaseImageDelete(deleteImagPath);
     });
-    const user = await User?.findById(req.user?.id);
-    userChecker(user, res);
+    const user = await userModel.findById(req.user?.id);
+    validateUserPresence(user, res);
     await Post.findByIdAndDelete(id);
     user?.posts?.filter((post) => post.toString() != post._id.toString());
     await user?.save();
@@ -204,14 +204,14 @@ const removePost = async (req, res) => {
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: true,
+      successBoolean: true,
       message: "Post deleted sucessfully",
     });
   } catch (e) {
     return response({
       res: res,
       statusCode: 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });

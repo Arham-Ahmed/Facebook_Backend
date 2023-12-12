@@ -1,30 +1,18 @@
 const mongoose = require("mongoose");
 
-const PostScehma = new mongoose.Schema(
+const postScehma = new mongoose.Schema(
   {
     caption: {
       type: String,
-      minLength: [0, "Caption must be Shorter than 0 Character"],
-      maxLength: [150, "Caption must be Shorter than 150 Character"],
+      minLength: 0,
+      maxLength: [150, "Caption must be shorter than 150 character"],
     },
     imageUrl: [{ type: String }],
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
     },
-    likes: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    comments: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Comment",
-      },
-    ],
   },
   { timestamps: true }
 );
-module.exports = mongoose.model("Post", PostScehma);
+module.exports = mongoose.model("post", postScehma);

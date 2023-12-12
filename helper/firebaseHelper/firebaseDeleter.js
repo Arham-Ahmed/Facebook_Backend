@@ -1,7 +1,6 @@
 const firebase = require("firebase/app");
 const { ref, deleteObject, getStorage } = require("firebase/storage");
 const { firebaseConfig } = require("../../Config/firebaseConfig/firebase");
-const userModel = require("../../Models/User");
 
 firebase.initializeApp(firebaseConfig);
 const storage = getStorage();

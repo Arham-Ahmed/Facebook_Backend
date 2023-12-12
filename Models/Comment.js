@@ -1,24 +1,21 @@
 const mongoose = require("mongoose");
 
-const CommentSchema = new mongoose.Schema(
+const commentSchema = new mongoose.Schema(
   {
-    postid: {
+    postId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Post",
+      ref: "post",
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: "user",
     },
     comment: {
       type: String,
       required: true,
-      maxLength: [50, "Comment must be Shorter than 50 Character"],
-    },
-    reply: {
-      type: String,
+      maxLength: [50, "Comment must be shorter than 50 character"],
     },
   },
   { timestamps: true }
 );
-module.exports = mongoose.model("Comment", CommentSchema);
+module.exports = mongoose.model("comment", commentSchema);

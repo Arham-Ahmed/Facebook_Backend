@@ -1,85 +1,52 @@
 const mongoose = require("mongoose");
 const bcryptjs = require("bcryptjs");
-const Joi = require("joi");
-const moment = require("moment");
-const UserSchema = new mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
-      required: [true, "PLz Enter your Name"],
+      required: [true, "Please enter your name"],
     },
     email: {
       type: String,
-      required: [true, "Plz Enter your Email"],
-      unique: [true, "Email Alerady Exists"],
+      required: [true, "Please enter your email"],
+      unique: [true, "Email alerady exists"],
+      match: [/\S+@\S+\.\S+/, "Please enter a valid email"],
       lowercase: true,
     },
     password: {
       type: String,
-      required: [true, "Plz Enter your Password"],
-      min: [6, "Password must be Longer than 6 Character"],
-      min: [20, "Password must be Shorter than 20 Character"],
+      required: [true, "Please enter your password"],
+      minLength: [6, "Password must be longer than 6 character"],
+      maxLength: [20, "Password must be shorter than 20 character"],
       select: false,
     },
-    profile_photo: [
-      {
-        type: String,
-      },
-    ],
-    cover_photo: [
-      {
-        type: String,
-      },
-    ],
+    profilePhotos: [String],
+    coverPhotos: [String],
     phoneNumber: {
-      type: String,
-      min: [11, "Plz Enter a valid number"],
+      type: Number,
+      match: [/^1[3,4,5,6,7,8,9]\d{9}$/, "Please enter a valid number"],
+      min: [11, "Phone number must be shorter then 11 number"],
     },
     bio: {
       type: String,
     },
-    liveIn: {
+    livesIn: {
       type: String,
     },
     socialLinks: [String],
-    posts: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Post",
-      },
-    ],
-    followers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    following: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
     role: {
       type: String,
       default: "user",
       select: false,
     },
-    token: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Token",
-        select: false,
-      },
-    ],
-    isDelete: {
-      type: String,
+    isDeleted: {
+      type: Date,
       default: null,
     },
   },
   { timestamps: true }
 );
-UserSchema.pre("save", async function (next) {
+userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     const hash = await bcryptjs.hash(this.password, 8);
     this.password = hash;
@@ -87,4 +54,4 @@ UserSchema.pre("save", async function (next) {
   next();
 });
 
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.model("user", userSchema);

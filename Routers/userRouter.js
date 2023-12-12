@@ -5,7 +5,7 @@ const {
   getallUsers,
   removeUser,
   updateUser,
-  LogoutUser,
+  logoutUser,
   loginUser,
 } = require("../Controllers/userController");
 
@@ -35,7 +35,7 @@ userRouter
     createUser
   )
   .post("/login", validator(userLoginSchema), loginUser)
-  .post("/logout", isauthenticated, LogoutUser)
+  .post("/logout", isauthenticated, logoutUser)
   .delete("/delete", isauthenticated, removeUser)
   .put(
     "/updateUser",

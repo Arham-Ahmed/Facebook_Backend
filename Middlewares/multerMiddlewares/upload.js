@@ -13,7 +13,7 @@ const upload = (fields) => {
         return response({
           res: res,
           statusCode: 413,
-          sucessBoolean: false,
+          successBoolean: false,
           message: "MulterError",
           payload: error,
         });

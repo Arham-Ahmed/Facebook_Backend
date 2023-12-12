@@ -1,7 +1,7 @@
 const response = require("../utils/response");
-const Comment = require("../Models/Comment");
+const comment = require("../Models/comment");
 const Post = require("../Models/Post");
-const UserModel = require("../Models/User");
+const UserModel = require("../Models/user");
 const { isValidObjectId } = require("mongoose");
 
 const Like = async (req, res) => {
@@ -12,7 +12,7 @@ const Like = async (req, res) => {
       return response({
         res: res,
         statusCode: 400,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Error : Invalid post id",
       });
     const currPost = await Post?.findById(postId);
@@ -20,7 +20,7 @@ const Like = async (req, res) => {
       return response({
         res: res,
         statusCode: 400,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Error :( no post Found",
       });
 
@@ -32,7 +32,7 @@ const Like = async (req, res) => {
       return response({
         res: res,
         statusCode: 200,
-        sucessBoolean: true,
+        successBoolean: true,
         message: "UnLiked :(",
         payload: currPost,
       });
@@ -47,14 +47,14 @@ const Like = async (req, res) => {
         return response({
           res: res,
           statusCode: 400,
-          sucessBoolean: false,
+          successBoolean: false,
           message: "Error :( Id not found",
         });
 
       return response({
         res: res,
         statusCode: 200,
-        sucessBoolean: true,
+        successBoolean: true,
         message: "Liked :)",
         payload: likerId,
       });
@@ -63,7 +63,7 @@ const Like = async (req, res) => {
     return response({
       res: res,
       statusCode: 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -76,7 +76,7 @@ const CreateComment = async (req, res) => {
       return response({
         res: res,
         statusCode: 400,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Error : comment id not found",
       });
 
@@ -86,10 +86,10 @@ const CreateComment = async (req, res) => {
       return response({
         res: res,
         statusCode: 400,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Error : No UserFound",
       });
-    const newComment = new Comment({
+    const newComment = new comment({
       owner: req?.user?._id,
       postid: currPost?._id,
       comment: comment,
@@ -98,7 +98,7 @@ const CreateComment = async (req, res) => {
       response({
         res: res,
         statusCode: 400,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Error : Some error occur while creating comment",
       });
 
@@ -128,7 +128,7 @@ const CreateComment = async (req, res) => {
     return response({
       res: res,
       statusCode: 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -141,26 +141,26 @@ const DeleteComment = async (req, res) => {
       return response({
         res: res,
         statusCode: 422,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "inavalid comment id",
       });
 
-    const comment = await Comment?.findById(id);
+    const comment = await comment?.findById(id);
     if (!comment)
       return response({
         res: res,
         statusCode: 404,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "No comments found",
       });
-    await Comment?.findByIdAndDelete(id);
+    await comment?.findByIdAndDelete(id);
     const postID = comment.postid._id;
     const post = await Post.findById(postID);
     if (!post)
       return response({
         res: res,
         statusCode: 404,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "No post found",
       });
     post?.comments?.filter(
@@ -171,14 +171,14 @@ const DeleteComment = async (req, res) => {
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Comment Deleted Sucessfully",
     });
   } catch (e) {
     return response({
       res: res,
       statusCode: 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });

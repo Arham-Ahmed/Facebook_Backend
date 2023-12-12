@@ -26,7 +26,7 @@ const io = new Server(httpServer, {
   },
 });
 io.on("connection", (socket) => {
-  socket.emit("connection", `${socket.id} connected to server`);
+  io.emit("connection", `${socket.id} connected to server`);
   socket.on("join", function (data) {
     console.log(data);
   });

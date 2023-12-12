@@ -1,17 +1,15 @@
-const Users = require("../Models/User");
+const userModel = require("../Models/user");
 const bcryptjs = require("bcryptjs");
-const tokenModel = require("../Models/Token");
+const tokenModel = require("../Models/token");
 const response = require("../utils/response");
-const moment = require("moment");
-
 const {
   firebaseImageDelete,
   imagePathMaker,
-  userChecker,
+  validateUserPresence,
   jwtGenrator,
   imageUploader,
 } = require("../helper");
-// Initialize Firebase
+// const { isValidObjectId, default: mongoose } = require("mongoose");
 
 ///////////////////////////////////////////// For Creating Users /////////////////////////////////////
 const createUser = async (req, res) => {
@@ -21,20 +19,17 @@ const createUser = async (req, res) => {
       email: req?.body?.email,
       password: req?.body?.password,
     };
-    const existsuser = await Users?.findOne({ email: user?.email });
-    if (!existsuser || existsuser?.isDelete) {
-      if (existsuser?.isDelete) {
-        await Users?.findOneAndDelete({
-          email: user?.email,
-        });
-      }
+    const existingUser = await userModel.findOne({ email: user?.email });
+    validateUserPresence(existingUser);
 
-      const newUser = new Users(user);
+    if (existingUser?.isDeleted) {
+      await userModel.findOneAndDelete({ email: user?.email });
+      const newUser = new userModel(user);
       if (!newUser)
         return response({
           res: res,
           statusCode: 500,
-          sucessBoolean: false,
+          successBoolean: false,
           message: "Some error occur on creating account",
         });
 
@@ -49,24 +44,24 @@ const createUser = async (req, res) => {
       return response({
         res: res,
         statusCode: 201,
-        sucessBoolean: true,
+        successBoolean: true,
         message: "User created sucessfully",
         payload: newUser,
       });
     }
 
-    if (!existsuser?.isDelete)
+    if (!existingUser?.isDeleted)
       return response({
         res: res,
         statusCode: 409,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "User with this email already exist ",
       });
   } catch (e) {
     return response({
       res: res,
       statusCode: 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -76,14 +71,16 @@ const createUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
-    const user = await Users?.findOne({ email: email })?.select("+password");
-    userChecker(user, res);
+    const user = await userModel
+      ?.findOne({ email: email })
+      ?.select("+password");
+    validateUserPresence(user, res);
     const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch)
       return response({
         res: res,
         statusCode: 401,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Invalid Credential",
       });
 
@@ -92,28 +89,28 @@ const loginUser = async (req, res) => {
       return response({
         res: res,
         statusCode: 500,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Internal server error",
       });
 
     // tokenSave in database
     const newToken = new tokenModel({
       token: token,
-      Device: req?.headers["user-agent"],
+      device: req?.headers["user-agent"],
       user_id: user?._id,
     });
     if (!newToken)
       return response({
         res: res,
         statusCode: 500,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Internal server error",
       });
     await newToken?.save();
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: true,
+      successBoolean: true,
       message: "Login sucessfully",
       payload: {
         user: user,
@@ -124,14 +121,14 @@ const loginUser = async (req, res) => {
     return response({
       res: res,
       statusCode: e?.statusCode || 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: e?.message || "Internal server error",
     });
   }
 };
 ///////////////////////////////////////////// For Logout Users /////////////////////////////////////
 
-const LogoutUser = async (req, res) => {
+const logoutUser = async (req, res) => {
   try {
     const authorization = req?.headers?.authorization;
     const token = authorization?.split(" ")[1];
@@ -139,7 +136,7 @@ const LogoutUser = async (req, res) => {
       return response({
         res: res,
         statusCode: 401,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "Unauthorized !!",
       });
     const databaseToken = await tokenModel.findOne({ token: token });
@@ -147,7 +144,7 @@ const LogoutUser = async (req, res) => {
       return response({
         res: res,
         statusCode: 500,
-        sucessBoolean: true,
+        successBoolean: true,
         message: "Failed to logout. Please try again.",
       });
     databaseToken.expireAt = Date.now();
@@ -155,14 +152,14 @@ const LogoutUser = async (req, res) => {
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: true,
+      successBoolean: true,
       message: "Logout sucessfully",
     });
   } catch (e) {
     return response({
       res: res,
       statusCode: 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -172,50 +169,47 @@ const LogoutUser = async (req, res) => {
 const removeUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
-    const user = await Users?.findOne({ email: email })?.select([
-      "+password",
-      "+isDelete",
-    ]);
-
-    userChecker(user, res);
-
+    const user = await userModel
+      ?.findOne({ email: email })
+      ?.select(["+password", "+isDeleted"]);
+    validateUserPresence(user, res);
     const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch) {
       return response({
         res: res,
-        statusCode: 404,
-        sucessBoolean: false,
+        statusCode: 401,
+        successBoolean: false,
         message: "Invalid Credential",
       });
     }
 
-    const deletedProfileImages = user?.profile_photo?.map(async (image) => {
+    const deletedProfileImages = user?.profilePhotos?.map(async (image) => {
       const deleteImagePath = imagePathMaker(image);
       return firebaseImageDelete(deleteImagePath, res);
     });
-    const deletedCoverImages = user?.cover_photo?.map(async (image) => {
+    const deletedCoverImages = user?.coverPhotos?.map(async (image) => {
       const deleteImagePath = imagePathMaker(image);
       return firebaseImageDelete(deleteImagePath, res);
     });
-    const deleteUser = await Users?.findByIdAndUpdate(req.user?._id, {
-      isDelete: moment().format("YYYY MMMM Do , h:mm:ss a"),
-    });
-    if (!deleteUser) {
-      return response({
-        res: res,
-        statusCode: 500,
-        sucessBoolean: false,
-        message: "User not found",
-      });
-    }
-    user.profile_photo = [];
+    // const deleteUser = await userModel.findById(req.user?._id);
+    // // if (!deleteUser) {
+    // //   return response({
+    // //     res: res,
+    // //     statusCode: 400,
+    // //     successBoolean: false,
+    // //     message: "User not found",
+    // //   });
+    // // }
+    // validateUserPresence(deleteUser);
+    user.set({ isDeleted: Date.now() });
+    user.profilePhotos = [];
     await user.save();
     const databaseToken = await tokenModel.findOne({ token: req.token });
     if (!databaseToken)
       return response({
         res: res,
         statusCode: 500,
-        sucessBoolean: true,
+        successBoolean: true,
         message: "Failed to logout. Please try again.",
       });
     databaseToken.expireAt = Date.now();
@@ -226,14 +220,14 @@ const removeUser = async (req, res) => {
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: true,
+      successBoolean: true,
       message: "Deleted sucessfully",
     });
   } catch (e) {
     return response({
       res: res,
       statusCode: 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -243,8 +237,8 @@ const removeUser = async (req, res) => {
 const updateUser = async (req, res) => {
   try {
     const { email, name, bio, liveIn, socialLinks } = req?.body;
-    const user = await Users?.findOne({ _id: req.user?._id });
-    userChecker(user);
+    const user = await userModel.findOne({ _id: req.user?._id });
+    validateUserPresence(user);
     user.set({
       email,
       name,
@@ -264,7 +258,7 @@ const updateUser = async (req, res) => {
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: true,
+      successBoolean: true,
       message: "Updated sucessfully",
       payload: user,
     });
@@ -272,7 +266,7 @@ const updateUser = async (req, res) => {
     return response({
       res: res,
       statusCode: e.statusCode || 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -290,19 +284,19 @@ const getallUsers = async (req, res) => {
     if (name) {
       queryObject.name = { $regex: name, $options: "i" };
     }
-    let allUsers = await Users?.find(queryObject);
+    let allUsers = await userModel.find(queryObject);
     if (!allUsers?.length)
       return response({
         res: res,
         statusCode: 404,
-        sucessBoolean: false,
+        successBoolean: false,
         message: "No user found",
       });
 
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: true,
+      successBoolean: true,
       message: "allUsers",
       payload: allUsers,
     });
@@ -310,7 +304,7 @@ const getallUsers = async (req, res) => {
     return response({
       res: res,
       statusCode: e.statusCode || 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: "Error",
       payload: e.message,
     });
@@ -320,13 +314,14 @@ const getallUsers = async (req, res) => {
 const userCall = async (req, res) => {
   try {
     const user_id = req.user?._id;
-    const user = await Users?.findById(user_id)
+    const user = await userModel
+      ?.findById(user_id)
       .select(["-token", "-role", "-password"])
       .populate("posts");
     return response({
       res: res,
       statusCode: 200,
-      sucessBoolean: true,
+      successBoolean: true,
       message: "user are",
       payload: {
         user: user,
@@ -337,19 +332,132 @@ const userCall = async (req, res) => {
     return response({
       res: res,
       statusCode: e?.statusCode || 500,
-      sucessBoolean: false,
+      successBoolean: false,
       message: e?.message || "Internal server error",
     });
   }
 };
 //////////////////////////////////////////// Friend Request  ////////////////////////////////////////
-const friendReq = () => {};
+// const friendReq = async (req, res) => {
+//   try {
+//     const { id } = req.body;
+//     if (!isValidObjectId(id)) {
+//       return response({
+//         res: res,
+//         statusCode: 400,
+//         message: "No user found",
+//       });
+//     }
+//     const requester = req.user.id;
+//     const receiver = await userModel.aggregate([
+//       { $match: { _id: mongoose.Schema.Types.ObjectId(id) } },
+//       {
+//         $lookup: {
+//           from: "FriendRequest",
+//           localfeild: "requesterId",
+//           foreignField: "_id",
+//           // as: "requester",
+//         },
+//       },
+//     ]);
+//     console.log(
+//       "🚀 ~ file: userController.js:365 ~ friendReq ~ receiver:",
+//       receiver
+//     );
+//     validateUserPresence(receiver);
+//     if (receiver) {
+//     }
+//     const FriendRequest = new friendRequestModel({
+//       requesterId: requester,
+//       recipientId: receiver._id,
+//     });
+//     if (!FriendRequest) {
+//       return response({
+//         res: res,
+//         statusCode: 500,
+//         message: "Internal server error",
+//       });
+//     }
+//     await FriendRequest.save();
+//     receiver?.friendRequests?.push(FriendRequest);
+//     await receiver.save();
+//     return response({
+//       res: res,
+//       statusCode: 200,
+//       successBoolean: true,
+//       message: "Request Submit Sucessfully",
+//       payload: FriendRequest,
+//     });
+//   } catch (e) {
+//     return response({
+//       res: res,
+//       statusCode: 500,
+//       successBoolean: false,
+//       message: "Error",
+//       payload: e.message,
+//     });
+//   }
+// };
+
+// const friendAdd = async (req, res) => {
+//   try {
+//     const { id } = req.body;
+//     if (!isValidObjectId(id)) {
+//       return response({
+//         res: res,
+//         statusCode: 400,
+//         message: "No user found",
+//       });
+//     }
+//     // current User is accepter  //
+//     // and friend Who where add in friends array   //
+//     const accepter = await userModel.findById(req.user._id);
+//     const friendReqUpadate = await friendRequestModel.findById(id);
+//     if (!friendReqUpadate) {
+//       return response({
+//         res: res,
+//         statusCode: 400,
+//         message: "Id required",
+//       });
+//     }
+//     const friend = await userModel.findById(
+//       friendReqUpadate?.recipientId.toString()
+//     );
+//     validateUserPresence(friend);
+//     friend.friends.push(accepter._id);
+//     friendReqUpadate.set({ status: "Accepted" });
+//     accepter.friendRequests.filter(
+//       (request) => request._id.toString() != friend._id.toString()
+//     );
+//     friend.friendRequests.filter(
+//       (request) => request._id.toString() != friend._id.toString()
+//     );
+//     await friendReqUpadate.save();
+//     await friend.save();
+//     await accepter.save();
+//     return response({
+//       res: res,
+//       statusCode: 200,
+//       message: `${friend.name} as a friend add sucessfully`,
+//       payload: accepter,
+//     });
+//   } catch (e) {
+//     return response({
+//       res: res,
+//       statusCode: 500,
+//       successBoolean: false,
+//       message: "Error",
+//       payload: e.message,
+//     });
+//   }
+// };
+
 module.exports = {
   createUser,
   getallUsers,
   removeUser,
   updateUser,
   loginUser,
-  LogoutUser,
+  logoutUser,
   userCall,
 };
