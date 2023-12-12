@@ -11,6 +11,7 @@ const likeSchema = new mongoose.Schema(
       ref: "post",
     },
     reactionType: {
+      /// for Future purpose
       type: String,
       enum: ["like", "heart", "laugh", "sad", "angry"],
       required: true,

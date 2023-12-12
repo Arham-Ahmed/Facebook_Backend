@@ -1,5 +1,5 @@
 const { isValidObjectId } = require("mongoose");
-const Post = require("../Models/Post");
+const postModel = require("../Models/Post");
 const userModel = require("../Models/user");
 const {
   firebaseUploder,
@@ -22,13 +22,13 @@ const createPost = async (req, res) => {
     if (!Object.keys(req?.body).length) {
       return response({
         res: res,
-        statusCode: 200,
+        statusCode: 400,
         successBoolean: false,
         message: "Atleast 1 feild present",
       });
     }
 
-    const post = new Post(newPost);
+    const post = new postModel(newPost);
     if (!post)
       return response({
         res: res,
@@ -42,16 +42,18 @@ const createPost = async (req, res) => {
     await user?.save();
 
     if (req?.files?.imageUrl?.length) {
-      const imageArray = req?.files?.imageUrl?.map(async (img, index) => {
-        // imageMimeType checker
-        imageMimetype(img, res);
-        const image = req?.files?.imageUrl[index];
-        // Firebase uploader
+      const imageArray = await Promise.all(
+        req?.files?.imageUrl?.map(async (img, index) => {
+          // imageMimeType checker
+          imageMimetype(img, res);
+          const image = req?.files?.imageUrl[index];
+          // Firebase uploader
 
-        return firebaseUploder("/post_images", image);
-      });
+          return firebaseUploder("/post_images", image);
+        })
+      );
       // const allPromis = ;
-      post?.imageUrl?.push(...(await Promise.all(imageArray)));
+      post?.imageUrl?.push(...imageArray);
     }
     await post.save();
     return response({
@@ -81,7 +83,7 @@ const getallPost = async (req, res) => {
       path: "comments",
       populate: {
         path: "owner",
-        model: "User",
+        model: "user",
         select: ["name", "profile_photo", "createdAt"],
       },
     },
@@ -91,7 +93,7 @@ const getallPost = async (req, res) => {
     },
   ];
   try {
-    let posts = await Post.find({}).populate(populateValue); //.sort("-createdAt");
+    let posts = await postModel.find({}).populate(populateValue); //.sort("-createdAt");
     if (!posts?.length)
       return response({
         res: res,
@@ -133,7 +135,7 @@ const getallUserPost = async (req, res) => {
         path: "comments",
         populate: {
           path: "owner",
-          model: "User",
+          model: "user",
           select: ["name", "profile_photo", "createdAt"],
         },
       },
@@ -142,8 +144,8 @@ const getallUserPost = async (req, res) => {
         select: ["name", "profile_photo", "createdAt"],
       },
     ];
-    const posts = await Post.find({ owner: req.user?._id })
-
+    const posts = await postModel
+      .find({ owner: req.user?._id })
       .populate(populateValue)
       .sort("-createdAt");
     if (!posts?.length)
@@ -176,13 +178,13 @@ const removePost = async (req, res) => {
   try {
     const { id } = req?.params;
     if (!id || !isValidObjectId(id))
-      response({
+      return response({
         res: res,
         statusCode: 400,
         successBoolean: true,
         message: "Invalid post id",
       });
-    const post = await Post?.findOne({ _id: id });
+    const post = await postModel?.findOne({ _id: id });
     if (!post)
       return response({
         res: res,
@@ -190,14 +192,17 @@ const removePost = async (req, res) => {
         successBoolean: true,
         message: "No post found",
       });
-    const deletedImages = post?.imageUrl?.map((image, index) => {
+    const deletedImages = post?.imageUrl?.map((image) => {
       const deleteImagPath = imagePathMaker(image);
       return firebaseImageDelete(deleteImagPath);
     });
     const user = await userModel.findById(req.user?.id);
     validateUserPresence(user, res);
-    await Post.findByIdAndDelete(id);
-    user?.posts?.filter((post) => post.toString() != post._id.toString());
+    post.set({ isDeleted: Date.now() });
+    // await postModel.findByIdAndDelete(id);
+    // user?.posts?.filter((post) => post.toString() != post._id.toString());
+    // user?.post?.pull(post?._id);
+    await post?.save();
     await user?.save();
     await Promise.all(deletedImages);
 

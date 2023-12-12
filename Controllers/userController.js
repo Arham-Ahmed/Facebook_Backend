@@ -9,6 +9,7 @@ const {
   jwtGenrator,
   imageUploader,
 } = require("../helper");
+const { isValidObjectId } = require("mongoose");
 // const { isValidObjectId, default: mongoose } = require("mongoose");
 
 ///////////////////////////////////////////// For Creating Users /////////////////////////////////////
@@ -313,11 +314,29 @@ const getallUsers = async (req, res) => {
 //////////////////////////////////////////// Me OR User Call /////////////////////////////////////////
 const userCall = async (req, res) => {
   try {
-    const user_id = req.user?._id;
-    const user = await userModel
-      ?.findById(user_id)
-      .select(["-token", "-role", "-password"])
-      .populate("posts");
+    const userId = req.user?._id;
+
+    if (!isValidObjectId(userId)) {
+      return response({
+        res,
+        statusCode: 400,
+        message: "Invalid user id",
+      });
+    }
+    const user = await userModel.aggregate([
+      { $match: { _id: userId } },
+      {
+        $lookup: {
+          from: "post",
+          localField: "owner",
+          foreignField: "_id",
+          as: "post",
+        },
+      },
+    ]);
+    // ?.findById(user_id)
+    // .select(["-token", "-role", "-password"])
+    // .populate("post");
     return response({
       res: res,
       statusCode: 200,
