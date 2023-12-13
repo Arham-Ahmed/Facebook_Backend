@@ -1,12 +1,13 @@
 const userModel = require("../Models/user");
 const bcryptjs = require("bcryptjs");
 const tokenModel = require("../Models/token");
+const mediaSchema = require("../Models/media");
 const response = require("../utils/response");
 const {
   firebaseImageDelete,
   imagePathMaker,
   validateUserPresence,
-  jwtGenrator,
+  jwtGenerator,
   imageUploader,
 } = require("../helper");
 const { isValidObjectId } = require("mongoose");
@@ -15,49 +16,64 @@ const { isValidObjectId } = require("mongoose");
 ///////////////////////////////////////////// For Creating Users /////////////////////////////////////
 const createUser = async (req, res) => {
   try {
-    const user = {
-      name: req?.body?.name,
-      email: req?.body?.email,
-      password: req?.body?.password,
-    };
-    const existingUser = await userModel.findOne({ email: user?.email });
-    validateUserPresence(existingUser);
-
-    if (existingUser?.isDeleted) {
-      await userModel.findOneAndDelete({ email: user?.email });
-      const newUser = new userModel(user);
-      if (!newUser)
-        return response({
-          res: res,
-          statusCode: 500,
-          successBoolean: false,
-          message: "Some error occur on creating account",
-        });
-
-      if (req?.files && Object.keys(req?.files).length > 0) {
-        await Promise.all(
-          Object?.keys(req.files)?.map((key) => {
-            return imageUploader(key, req, newUser);
-          })
-        );
-      }
-      await newUser.save();
-      return response({
-        res: res,
-        statusCode: 201,
-        successBoolean: true,
-        message: "User created sucessfully",
-        payload: newUser,
-      });
-    }
-
-    if (!existingUser?.isDeleted)
+    const existingUser = await userModel.aggregate([
+      {
+        $match: { email: req.body.email, isDeleted: null },
+      },
+    ]);
+    if (existingUser && existingUser?.length) {
       return response({
         res: res,
         statusCode: 409,
         successBoolean: false,
         message: "User with this email already exist ",
       });
+    }
+    const user = {
+      name: req?.body?.name,
+      email: req?.body?.email.toLowerCase(),
+      password: req?.body?.password,
+    };
+    const newUser = new userModel(user);
+    if (req?.files && Object.keys(req?.files).length > 0) {
+      await Promise.all(
+        Object?.keys(req.files)?.map(async (key) => {
+          if (req.files[key]) {
+            const newMedia = new mediaSchema({
+              type: key,
+              owner: newUser._id,
+              url: await imageUploader(key, req),
+            });
+            await newMedia.save();
+          }
+        })
+      );
+    }
+    await newUser.save();
+    const createdUser = await userModel.aggregate([
+      { $match: { _id: newUser._id } },
+      {
+        $lookup: {
+          from: "media",
+          localField: "_id",
+          foreignField: "owner",
+          as: "media",
+        },
+      },
+      // {
+      //   $group: {
+      //     _id: "$type",
+      //     total: { $sum: 1 },
+      //   },
+      // },
+    ]);
+    return response({
+      res: res,
+      statusCode: 201,
+      successBoolean: true,
+      message: "User created sucessfully",
+      payload: createdUser,
+    });
   } catch (e) {
     return response({
       res: res,
@@ -71,11 +87,10 @@ const createUser = async (req, res) => {
 ///////////////////////////////////////////// For Loggin Users /////////////////////////////////////
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req?.body;
     const user = await userModel
-      ?.findOne({ email: email })
+      ?.findOne({ email: req?.body?.email })
       ?.select("+password");
-    validateUserPresence(user, res);
+    const { password } = req?.body;
     const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch)
       return response({
@@ -85,7 +100,7 @@ const loginUser = async (req, res) => {
         message: "Invalid Credential",
       });
 
-    const token = jwtGenrator(user);
+    const token = jwtGenerator(user);
     if (!token)
       return response({
         res: res,
@@ -100,14 +115,9 @@ const loginUser = async (req, res) => {
       device: req?.headers["user-agent"],
       user_id: user?._id,
     });
-    if (!newToken)
-      return response({
-        res: res,
-        statusCode: 500,
-        successBoolean: false,
-        message: "Internal server error",
-      });
+
     await newToken?.save();
+
     return response({
       res: res,
       statusCode: 200,
@@ -171,9 +181,16 @@ const removeUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
     const user = await userModel
-      ?.findOne({ email: email })
-      ?.select(["+password", "+isDeleted"]);
-    validateUserPresence(user, res);
+      ?.findOne({ email: email, isDeleted: null })
+      ?.select("+password");
+    // validateUserPresence(user);
+    if (!user) {
+      return response({
+        res: res,
+        statusCode: 400,
+        message: "User not found",
+      });
+    }
     const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch) {
       return response({

@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please enter your email"],
       unique: [true, "Email alerady exists"],
-      match: [/\S+@\S+\.\S+/, "Please enter a valid email"],
+      match: [/^\S+[a-z\d]+@\S+\.\S+/, "Please enter a valid email"],
       lowercase: true,
     },
     password: {
@@ -20,8 +20,6 @@ const userSchema = new mongoose.Schema(
       maxLength: [20, "Password must be shorter than 20 character"],
       select: false,
     },
-    profilePhotos: [String],
-    coverPhotos: [String],
     phoneNumber: {
       type: Number,
       match: [/^1[3,4,5,6,7,8,9]\d{9}$/, "Please enter a valid number"],

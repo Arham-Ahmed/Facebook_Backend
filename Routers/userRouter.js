@@ -27,8 +27,8 @@ userRouter
     "/register",
     [
       upload([
-        { name: "profile_photo", maxcount: 1 },
-        { name: "cover_photo", maxcount: 1 },
+        { name: "profileImage", maxcount: 1 },
+        { name: "coverImage", maxcount: 1 },
       ]),
       validator(userSignupSchema),
     ],
@@ -42,8 +42,8 @@ userRouter
     [
       isauthenticated,
       upload([
-        { name: "profile_photo", maxcount: 1 },
-        { name: "cover_photo", maxcount: 1 },
+        { name: "profileImage", maxcount: 1 },
+        { name: "coverImage", maxcount: 1 },
       ]),
       validator(userUpdateSchema),
     ],

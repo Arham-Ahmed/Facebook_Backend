@@ -4,7 +4,7 @@ const imageMimetype = require("./imageHelper/imageMimeType");
 const imagePathMaker = require("./imageHelper/imagePathMaker");
 const imageCompressor = require("./imageHelper/imageCompressor");
 const validateUserPresence = require("./normalHelper/validateUserPresence");
-const jwtGenrator = require("./jwtHelper/jwtGenrator");
+const jwtGenerator = require("./jwtHelper/jwtGenrator");
 const jwtVerifier = require("./jwtHelper/jwtVerifier");
 const imageUploader = require("./imageUploader/imageUploader");
 
@@ -15,7 +15,7 @@ module.exports = {
   imagePathMaker,
   imageCompressor,
   validateUserPresence,
-  jwtGenrator,
+  jwtGenerator,
   jwtVerifier,
   imageUploader,
 };

@@ -7,7 +7,6 @@ const postScehma = new mongoose.Schema(
       minLength: 0,
       maxLength: [150, "Caption must be shorter than 150 character"],
     },
-    imageUrl: [{ type: String }],
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
