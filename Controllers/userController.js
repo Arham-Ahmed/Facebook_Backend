@@ -2,6 +2,7 @@ const userModel = require("../Models/user");
 const bcryptjs = require("bcryptjs");
 const tokenModel = require("../Models/token");
 const mediaSchema = require("../Models/media");
+const linkModel = require("../Models/link");
 const response = require("../utils/response");
 const {
   firebaseImageDelete,
@@ -50,29 +51,11 @@ const createUser = async (req, res) => {
       );
     }
     await newUser.save();
-    const createdUser = await userModel.aggregate([
-      { $match: { _id: newUser._id } },
-      {
-        $lookup: {
-          from: "media",
-          localField: "_id",
-          foreignField: "owner",
-          as: "media",
-        },
-      },
-      // {
-      //   $group: {
-      //     _id: "$type",
-      //     total: { $sum: 1 },
-      //   },
-      // },
-    ]);
     return response({
       res: res,
       statusCode: 201,
       successBoolean: true,
-      message: "User created sucessfully",
-      payload: createdUser,
+      message: `Hello ${newUser.name}! Your account has been created successfully.`,
     });
   } catch (e) {
     return response({
@@ -90,6 +73,14 @@ const loginUser = async (req, res) => {
     const user = await userModel
       ?.findOne({ email: req?.body?.email })
       ?.select("+password");
+    if (!user) {
+      return response({
+        res: res,
+        statusCode: 400,
+        message: "User not found",
+      });
+    }
+
     const { password } = req?.body;
     const isMatch = await bcryptjs?.compare(password, user?.password);
     if (!isMatch)
@@ -99,7 +90,10 @@ const loginUser = async (req, res) => {
         successBoolean: false,
         message: "Invalid Credential",
       });
-
+    if (user.isDeleted) {
+      user.isDeleted = null;
+      user.save();
+    }
     const token = jwtGenerator(user);
     if (!token)
       return response({
@@ -113,18 +107,37 @@ const loginUser = async (req, res) => {
     const newToken = new tokenModel({
       token: token,
       device: req?.headers["user-agent"],
-      user_id: user?._id,
+      owner: user?._id,
     });
 
     await newToken?.save();
-
+    const logedinUser = await userModel.aggregate([
+      { $match: { _id: user._id } },
+      {
+        $lookup: {
+          from: "media",
+          localField: "_id",
+          foreignField: "owner",
+          as: "media",
+        },
+      },
+      {
+        $project: {
+          isDeleted: 0,
+          password: 0,
+          role: 0,
+          __v: 0,
+          "media.owner": 0,
+        },
+      },
+    ]);
     return response({
       res: res,
       statusCode: 200,
       successBoolean: true,
       message: "Login sucessfully",
       payload: {
-        user: user,
+        user: logedinUser,
         token: token,
       },
     });
@@ -254,31 +267,70 @@ const removeUser = async (req, res) => {
 ///////////////////////////////////////////// For Updating Users /////////////////////////////////////
 const updateUser = async (req, res) => {
   try {
-    const { email, name, bio, liveIn, socialLinks } = req?.body;
-    const user = await userModel.findOne({ _id: req.user?._id });
-    validateUserPresence(user);
+    const user = await userModel.findById(req.user?._id);
+    if (!user) {
+      return response({
+        res: res,
+        statusCode: 400,
+        message: "User not found",
+      });
+    }
+    let fieldToUpdate = {
+      email: req?.body?.email,
+      name: req?.body?.name,
+      password: req?.body?.password,
+      about: {
+        bio: req?.body?.bio,
+        livesIn: req?.body?.livesIn,
+      },
+    };
+    for (const [key, value] of Object.entries(fieldToUpdate)) {
+      if (!value) {
+        delete fieldToUpdate[key];
+      }
+    }
     user.set({
-      email,
-      name,
-      bio,
-      liveIn,
-      socialLinks,
+      ...fieldToUpdate,
     });
-
-    if (Object.keys(req?.files)?.length >= 1) {
+    if (req?.body?.socialLinks) {
+      const link = new linkModel({
+        url: req?.body?.socialLinks,
+        owner: req.user?._id,
+      });
+      await link.save();
+    }
+    if (req?.files && Object.keys(req?.files).length > 0) {
       await Promise.all(
         Object?.keys(req.files)?.map(async (key) => {
-          return imageUploader(key, req, user);
+          if (req.files[key]) {
+            const newMedia = new mediaSchema({
+              type: key,
+              owner: user._id,
+              url: await imageUploader(key, req),
+            });
+            await newMedia.save();
+          }
         })
       );
     }
     await user?.save();
+    const updatedUser = await userModel.aggregate([
+      { $match: { _id: user._id } },
+      {
+        $lookup: {
+          from: "links",
+          localField: "_id",
+          foreignField: "owner",
+          as: "socialLinks",
+        },
+      },
+    ]);
     return response({
       res: res,
       statusCode: 200,
       successBoolean: true,
       message: "Updated sucessfully",
-      payload: user,
+      payload: updatedUser,
     });
   } catch (e) {
     return response({
@@ -302,7 +354,7 @@ const getallUsers = async (req, res) => {
     if (name) {
       queryObject.name = { $regex: name, $options: "i" };
     }
-    let allUsers = await userModel.find(queryObject);
+    let allUsers = await userModel.find({ ...queryObject, isDeleted: null });
     if (!allUsers?.length)
       return response({
         res: res,
@@ -332,35 +384,51 @@ const getallUsers = async (req, res) => {
 const userCall = async (req, res) => {
   try {
     const userId = req.user?._id;
-
-    if (!isValidObjectId(userId)) {
-      return response({
-        res,
-        statusCode: 400,
-        message: "Invalid user id",
-      });
-    }
     const user = await userModel.aggregate([
       { $match: { _id: userId } },
       {
         $lookup: {
-          from: "post",
-          localField: "owner",
-          foreignField: "_id",
+          from: "posts",
+          localField: "_id",
+          foreignField: "owner",
           as: "post",
         },
       },
+      {
+        $lookup: {
+          from: "media",
+          localField: "_id",
+          foreignField: "owner",
+          as: "media",
+        },
+      },
+      {
+        $lookup: {
+          from: "links",
+          localField: "_id",
+          foreignField: "owner",
+          as: "socialLinks",
+        },
+      },
+
+      {
+        $project: {
+          isDeleted: 0,
+          password: 0,
+          role: 0,
+          __v: 0,
+          "media.owner": 0,
+          "socialLinks.owner": 0,
+        },
+      },
     ]);
-    // ?.findById(user_id)
-    // .select(["-token", "-role", "-password"])
-    // .populate("post");
     return response({
       res: res,
       statusCode: 200,
       successBoolean: true,
-      message: "user are",
+      message: "user",
       payload: {
-        user: user,
+        user: { ...user }[0],
         token: req.token,
       },
     });

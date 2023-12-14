@@ -1,12 +1,14 @@
 const { isValidObjectId } = require("mongoose");
 const postModel = require("../Models/Post");
 const userModel = require("../Models/user");
+const mediaSchema = require("../Models/media");
 const {
   firebaseUploder,
   firebaseImageDelete,
   imagePathMaker,
   imageMimetype,
   validateUserPresence,
+  imageUploader,
 } = require("../helper/index");
 
 const response = require("../utils/response");
@@ -14,53 +16,53 @@ const response = require("../utils/response");
 ////////////////////////////////// For Creating Post /////////////////////////////
 const createPost = async (req, res) => {
   try {
-    const newPost = {
-      caption: req?.body?.caption,
-      owner: req.user?._id,
-    };
-
     if (!Object.keys(req?.body).length) {
       return response({
         res: res,
         statusCode: 400,
         successBoolean: false,
-        message: "Atleast 1 feild present",
+        message: "You can't create an empty post",
       });
     }
-
+    const newPost = {
+      caption: req?.body?.caption,
+      owner: req.user?._id,
+    };
     const post = new postModel(newPost);
-    if (!post)
-      return response({
-        res: res,
-        statusCode: 500,
-        successBoolean: false,
-        message: "Some error on creating post",
-      });
-    const user = await userModel.findById(req.user?._id);
-    validateUserPresence(user, res);
-    user?.posts?.push(post?._id);
-    await user?.save();
+    // const user = await userModel.findById(req.user?._id, { isDeleted: null });
 
-    if (req?.files?.imageUrl?.length) {
-      const imageArray = await Promise.all(
-        req?.files?.imageUrl?.map(async (img, index) => {
-          // imageMimeType checker
-          imageMimetype(img, res);
-          const image = req?.files?.imageUrl[index];
-          // Firebase uploader
-
-          return firebaseUploder("/post_images", image);
+    if (req?.files && Object.keys(req?.files).length > 0) {
+      await Promise.all(
+        Object?.keys(req.files)?.map(async (key) => {
+          if (req.files[key]) {
+            const newMedia = new mediaSchema({
+              type: key,
+              post: post._id,
+              url: await imageUploader(key, req),
+            });
+            await newMedia.save();
+          }
         })
       );
-      // const allPromis = ;
-      post?.imageUrl?.push(...imageArray);
     }
     await post.save();
+    const userPost = await postModel.aggregate([
+      { $match: { _id: post._id } },
+      {
+        $lookup: {
+          from: "media",
+          localField: "_id",
+          foreignField: "post",
+          as: "postImage",
+        },
+      },
+      // { $project: { owner: 0 } },
+    ]);
     return response({
       res: res,
       statusCode: 201,
       message: "Post created sucessfully",
-      payload: post,
+      payload: userPost,
     });
   } catch (e) {
     return response({
@@ -74,43 +76,61 @@ const createPost = async (req, res) => {
 };
 ////////////////////////////////// For getall Posts ////////////////////////////////
 const getallPost = async (req, res) => {
-  const populateValue = [
-    {
-      path: "owner",
-      select: ["name", "profile_photo", "isDelete"],
-    },
-    {
-      path: "comments",
-      populate: {
-        path: "owner",
-        model: "user",
-        select: ["name", "profile_photo", "createdAt"],
-      },
-    },
-    {
-      path: "likes",
-      select: ["name", "profile_photo", "createdAt"],
-    },
-  ];
   try {
-    let posts = await postModel.find({}).populate(populateValue); //.sort("-createdAt");
+    let posts = await postModel.aggregate([
+      { $match: {} },
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "postOwner",
+        },
+      },
+      {
+        $lookup: {
+          from: "media",
+          localField: "postOwner._id",
+          foreignField: "owner",
+          as: "profileImages",
+        },
+      },
+      { $unwind: "$postOwner" },
+      // { $unwind: "$profileImages" },
+      {
+        $lookup: {
+          from: "media",
+          localField: "_id",
+          foreignField: "post",
+          as: "postimages",
+        },
+      },
+
+      {
+        $unset: [
+          "postOwner.password",
+          "postOwner.role",
+          "postOwner.isDeleted",
+          "postOwner.__v",
+        ],
+      },
+    ]);
     if (!posts?.length)
       return response({
         res: res,
-        statusCode: 404,
-        successBoolean: false,
+        statusCode: 200,
+        successBoolean: true,
         message: "No post found",
       });
-    const allPosts = posts
-      .filter((post) => post?.owner?.isDelete === null)
-      .sort((a, b) => b.createdAt - a.createdAt);
-
+    // const allPosts = posts
+    //   .filter((post) => post?.owner?.isDelete === null)
+    //   .sort((a, b) => b.createdAt - a.createdAt);
     return response({
       res: res,
       statusCode: 200,
       successBoolean: true,
       message: "All posts",
-      payload: allPosts,
+      payload: posts,
     });
   } catch (e) {
     return response({

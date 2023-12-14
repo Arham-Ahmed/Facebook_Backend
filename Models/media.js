@@ -11,7 +11,10 @@ const mediaSchema = new mongoose.Schema(
     owner: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "user",
-      required: true,
+    },
+    post: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "post",
     },
   },
   { timestamps: true }

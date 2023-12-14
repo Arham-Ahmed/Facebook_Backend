@@ -25,13 +25,14 @@ const userSchema = new mongoose.Schema(
       match: [/^1[3,4,5,6,7,8,9]\d{9}$/, "Please enter a valid number"],
       min: [11, "Phone number must be shorter then 11 number"],
     },
-    bio: {
-      type: String,
+    about: {
+      bio: {
+        type: String,
+      },
+      livesIn: {
+        type: String,
+      },
     },
-    livesIn: {
-      type: String,
-    },
-    socialLinks: [String],
     role: {
       type: String,
       default: "user",
