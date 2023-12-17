@@ -3,7 +3,7 @@ const bcryptjs = require("bcryptjs");
 const tokenModel = require("../Models/token");
 const mediaSchema = require("../Models/media");
 const linkModel = require("../Models/link");
-const response = require("../utils/response");
+const response = require("../Utils/response");
 const {
   firebaseImageDelete,
   imagePathMaker,

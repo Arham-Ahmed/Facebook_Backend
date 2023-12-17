@@ -1,5 +1,5 @@
 const multer = require("multer");
-const response = require("../../utils/response");
+const response = require("../../Utils/response");
 const storage = multer.memoryStorage();
 const upload = (fields) => {
   return (req, res, next) => {

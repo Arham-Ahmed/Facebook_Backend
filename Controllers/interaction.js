@@ -1,4 +1,4 @@
-const response = require("../utils/response");
+const response = require("../Utils/response");
 const comment = require("../Models/comment");
 const postModel = require("../Models/post");
 const UserModel = require("../Models/user");

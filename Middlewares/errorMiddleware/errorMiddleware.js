@@ -1,4 +1,4 @@
-const response = require("../../utils/response");
+const response = require("../../Utils/response");
 
 const errorHandler = async (error, req, res, next) => {
   error.statusCode = error.statusCode || 500;

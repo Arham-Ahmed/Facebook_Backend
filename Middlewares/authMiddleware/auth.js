@@ -1,7 +1,7 @@
 require("dotenv").config({ path: "../Secrets/.env" });
 const userModel = require("../../Models/user");
 const tokenModel = require("../../Models/token");
-const response = require("../../utils/response");
+const response = require("../../Utils/response");
 const { jwtVerifier, validateUserPresence } = require("../../helper");
 
 const isauthenticated = async (req, res, next) => {

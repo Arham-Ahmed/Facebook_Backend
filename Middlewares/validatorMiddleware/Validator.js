@@ -1,4 +1,4 @@
-const response = require("../../utils/response");
+const response = require("../../Utils/response");
 
 const validator = (schema) => {
   return (req, res, next) => {

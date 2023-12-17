@@ -11,7 +11,7 @@ const {
   imageUploader,
 } = require("../helper/index");
 
-const response = require("../utils/response");
+const response = require("../Utils/response");
 
 ////////////////////////////////// For Creating Post /////////////////////////////
 const createPost = async (req, res) => {
