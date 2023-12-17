@@ -1,5 +1,5 @@
 const { isValidObjectId } = require("mongoose");
-const postModel = require("../Models/Post");
+const postModel = require("../Models/post");
 const userModel = require("../Models/user");
 const mediaSchema = require("../Models/media");
 const {
@@ -222,9 +222,9 @@ const removePost = async (req, res) => {
     // await postModel.findByIdAndDelete(id);
     // user?.posts?.filter((post) => post.toString() != post._id.toString());
     // user?.post?.pull(post?._id);
+    await Promise.all(deletedImages);
     await post?.save();
     await user?.save();
-    await Promise.all(deletedImages);
 
     return response({
       res: res,

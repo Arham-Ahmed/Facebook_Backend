@@ -1,6 +1,6 @@
 const response = require("../utils/response");
 const comment = require("../Models/comment");
-const Post = require("../Models/Post");
+const postModel = require("../Models/post");
 const UserModel = require("../Models/user");
 const { isValidObjectId } = require("mongoose");
 
@@ -15,7 +15,7 @@ const Like = async (req, res) => {
         successBoolean: false,
         message: "Error : Invalid post id",
       });
-    const currPost = await Post?.findById(postId);
+    const currPost = await postModel.findById(postId);
     if (!currPost)
       return response({
         res: res,
@@ -80,7 +80,7 @@ const CreateComment = async (req, res) => {
         message: "Error : comment id not found",
       });
 
-    const currPost = await Post.findById(id);
+    const currPost = await postModel.findById(id);
 
     if (!currPost)
       return response({
@@ -155,7 +155,7 @@ const DeleteComment = async (req, res) => {
       });
     await comment?.findByIdAndDelete(id);
     const postID = comment.postid._id;
-    const post = await Post.findById(postID);
+    const post = await postModel.findById(postID);
     if (!post)
       return response({
         res: res,

@@ -410,16 +410,74 @@ const userCall = async (req, res) => {
           as: "socialLinks",
         },
       },
+      {
+        $lookup: {
+          from: "media",
+          localField: "post._id",
+          foreignField: "post",
+          as: "postMedia",
+        },
+      },
 
       {
         $project: {
-          isDeleted: 0,
-          password: 0,
-          role: 0,
-          __v: 0,
-          "media.owner": 0,
-          "socialLinks.owner": 0,
+          _id: 1,
+          name: 1,
+          email: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          about: {
+            livesIn: "$about.livesIn",
+            bio: "$about.bio",
+            socialLinks: "$socialLinks",
+          },
+          profileImages: {
+            $filter: {
+              input: "$media",
+              cond: { $eq: ["$$this.type", "profileImage"] },
+            },
+          },
+          coverImages: {
+            $filter: {
+              input: "$media",
+              cond: { $eq: ["$$this.type", "coverImage"] },
+            },
+          },
+          posts: {
+            $map: {
+              input: "$post",
+              as: "p",
+              in: {
+                post: "$$p",
+                postImages: "$postMedia",
+              },
+            },
+          },
         },
+      },
+
+      {
+        $unset: [
+          "profileImages.owner",
+          "profileImages.type",
+          "profileImages._id",
+          "profileImages.createdAt",
+          "profileImages.updatedAt",
+          "profileImages.__v",
+          //
+          "coverImages.owner",
+          "coverImages.type",
+          "coverImages._id",
+          "coverImages.createdAt",
+          "coverImages.updatedAt",
+          "coverImages.__v",
+          //
+          "postImages.owner",
+          "postImages.type",
+          "postImages._id",
+          "postImages.updatedAt",
+          "postImages.__v",
+        ],
       },
     ]);
     return response({
