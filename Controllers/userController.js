@@ -4,6 +4,7 @@ const tokenModel = require("../Models/token");
 const mediaModel = require("../Models/media");
 const linkModel = require("../Models/link");
 const { response, aggregator } = require("../Utils/index");
+
 const {
   firebaseImageDelete,
   imagePathMaker,
@@ -189,29 +190,38 @@ const removeUser = async (req, res) => {
         message: "Invalid Credential",
       });
     }
-    const media = mediaModel.aggregate([
-      {
-        $lookup: {
-          from: "users",
-          localField: "owner",
-          foreignField: "_id",
-          as: "media",
-        },
-      },
-    ]);
-    // await Promise.all(
-    //   user?.profilePhotos?.map(async ({ url }) => {
-    //     const deleteImagePath = imagePathMaker(url);
-    //     return firebaseImageDelete(deleteImagePath, res);
-    //   }),
-    //   user?.coverPhotos?.map(async ({ url }) => {
-    //     const deleteImagePath = imagePathMaker(url);
-    //     return firebaseImageDelete(deleteImagePath, res);
-    //   })
-    // );
+    const media = await mediaModel.find({ owner: req.user._id });
+    // const media = await mediaModel.aggregate([
+    //   {
+    //     $lookup: {
+    //       from: "users",
+    //       localField: "owner",
+    //       foreignField: "_id",
+    //       as: "media",
+    //     },
+    //   },
+    // ]);
+    await Promise.all(
+      media?.map(async ({ url, type, _id }) => {
+        if (type === "coverImage" || type === "profileImage") {
+          const deleteImagePath = imagePathMaker(url);
+          return (
+            // await mediaModel.findById(_id),
+            await firebaseImageDelete(deleteImagePath, res).finally(
+              async () => {
+                await mediaModel.findById(_id);
+              }
+            )
+          );
+        }
+      })
+      // media?.map(async ({ url }) => {
+      //   const deleteImagePath = imagePathMaker(url);
+      //   return await firebaseImageDelete(deleteImagePath, res);
+      // })
+    );
 
     user.set({ isDeleted: Date.now() });
-    user.profilePhotos = [];
     const databaseToken = await tokenModel.updateMany({
       owner: req.user._id,
       expireAt: Date.now(),
@@ -223,8 +233,6 @@ const removeUser = async (req, res) => {
         successBoolean: true,
         message: "Failed to logout. Please try again.",
       });
-    // databaseToken.set({ expireAt: Date.now() });
-    // await databaseToken.save();
     await user.save();
 
     return response({
