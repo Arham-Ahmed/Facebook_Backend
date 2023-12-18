@@ -2,13 +2,35 @@ const userModel = require("../Models/user");
 const aggregator = async (userId) => {
   return await userModel.aggregate([
     { $match: { _id: userId } },
+    // {
+    //   $lookup: {
+    //     from: "posts",
+    //     localField: "_id",
+    //     foreignField: "owner",
+    //     as: "post",
+    //     pipeline: [
+    //       {
+    //         $search: {
+    //           input: "post",
+    //           cond: { eq: ["isDeleted", null] },
+    //         },
+    //       },
+    //     ],
+    //   },
+    // },
     {
       $lookup: {
         from: "posts",
         localField: "_id",
         foreignField: "owner",
         as: "post",
-        // pipeline: [{ $match: { isDeleted: { $eq: null } } }],
+        pipeline: [
+          {
+            $match: {
+              isDeleted: { $eq: null },
+            },
+          },
+        ],
       },
     },
     {
@@ -90,8 +112,8 @@ const aggregator = async (userId) => {
         "posts.post.owner",
         "posts.post.type",
         "posts.post.__v",
-        // "posts.post.isDeleted",
-        "posts.post.updatedAt",
+        "posts.post.isDeleted",
+        // "posts.post.updatedAt",
         //
         "coverImages.owner",
         "coverImages.type",

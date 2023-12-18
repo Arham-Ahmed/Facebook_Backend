@@ -23,7 +23,7 @@ const userUpdateSchema = Joi.object().keys({
     .optional(),
   bio: Joi.string().min(0).max(150).optional(),
   livesIn: Joi.string().min(0).max(50).optional(),
-  socialLinks: Joi.string().optional(),
+  socialLinks: Joi.string().min(0).max(50).optional(),
   profileImage: Joi.string().optional(),
   coverImage: Joi.string().optional(),
 });

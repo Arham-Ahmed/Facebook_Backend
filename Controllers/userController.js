@@ -10,7 +10,6 @@ const {
   jwtGenerator,
   imageUploader,
 } = require("../helper");
-const { isValidObjectId } = require("mongoose");
 
 ///////////////////////////////////////////// For Creating Users /////////////////////////////////////
 const createUser = async (req, res) => {
