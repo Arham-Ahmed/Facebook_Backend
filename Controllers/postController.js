@@ -76,7 +76,7 @@ const createPost = async (req, res) => {
 const getallPost = async (req, res) => {
   try {
     let posts = await postModel.aggregate([
-      { $match: {} },
+      { $match: { isDeleted: null } },
       {
         $lookup: {
           from: "users",
@@ -111,6 +111,9 @@ const getallPost = async (req, res) => {
           "postOwner.isDeleted",
           "postOwner.__v",
         ],
+      },
+      {
+        $sort: { createdAt: 1 },
       },
     ]);
     if (!posts?.length)

@@ -1,7 +1,7 @@
 const userModel = require("../Models/user");
 const bcryptjs = require("bcryptjs");
 const tokenModel = require("../Models/token");
-const mediaSchema = require("../Models/media");
+const mediaModel = require("../Models/media");
 const linkModel = require("../Models/link");
 const { response, aggregator } = require("../Utils/index");
 const {
@@ -37,7 +37,7 @@ const createUser = async (req, res) => {
       await Promise.all(
         Object?.keys(req.files)?.map(async (key) => {
           if (req.files[key]) {
-            const newMedia = new mediaSchema({
+            const newMedia = new mediaModel({
               type: key,
               owner: newUser._id,
               url: await imageUploader(key, req),
@@ -108,34 +108,13 @@ const loginUser = async (req, res) => {
 
     await newToken?.save();
     const logedinUser = await aggregator(user._id);
-
-    // await userModel.aggregate([
-    //   { $match: { _id: user._id } },
-    //   {
-    //     $lookup: {
-    //       from: "media",
-    //       localField: "_id",
-    //       foreignField: "owner",
-    //       as: "media",
-    //     },
-    //   },
-    //   {
-    //     $project: {
-    //       isDeleted: 0,
-    //       password: 0,
-    //       role: 0,
-    //       __v: 0,
-    //       "media.owner": 0,
-    //     },
-    //   },
-    // ]);
     return response({
       res: res,
       statusCode: 200,
       successBoolean: true,
       message: "Login sucessfully",
       payload: {
-        user: logedinUser,
+        user: { ...logedinUser }[0],
         token: token,
       },
     });
@@ -192,7 +171,7 @@ const removeUser = async (req, res) => {
   try {
     const { email, password } = req?.body;
     const user = await userModel
-      ?.findOne({ email: email, isDeleted: null })
+      ?.findOne({ _id: req.user._id, email: email, isDeleted: null })
       ?.select("+password");
     if (!user) {
       return response({
@@ -210,28 +189,33 @@ const removeUser = async (req, res) => {
         message: "Invalid Credential",
       });
     }
+    const media = mediaModel.aggregate([
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "media",
+        },
+      },
+    ]);
+    // await Promise.all(
+    //   user?.profilePhotos?.map(async ({ url }) => {
+    //     const deleteImagePath = imagePathMaker(url);
+    //     return firebaseImageDelete(deleteImagePath, res);
+    //   }),
+    //   user?.coverPhotos?.map(async ({ url }) => {
+    //     const deleteImagePath = imagePathMaker(url);
+    //     return firebaseImageDelete(deleteImagePath, res);
+    //   })
+    // );
 
-    const deletedProfileImages = user?.profilePhotos?.map(async (image) => {
-      const deleteImagePath = imagePathMaker(image);
-      return firebaseImageDelete(deleteImagePath, res);
-    });
-    const deletedCoverImages = user?.coverPhotos?.map(async (image) => {
-      const deleteImagePath = imagePathMaker(image);
-      return firebaseImageDelete(deleteImagePath, res);
-    });
-    // const deleteUser = await userModel.findById(req.user?._id);
-    // // if (!deleteUser) {
-    // //   return response({
-    // //     res: res,
-    // //     statusCode: 400,
-    // //     successBoolean: false,
-    // //     message: "User not found",
-    // //   });
-    // // }
     user.set({ isDeleted: Date.now() });
     user.profilePhotos = [];
-    await user.save();
-    const databaseToken = await tokenModel.findOne({ token: req.token });
+    const databaseToken = await tokenModel.updateMany({
+      owner: req.user._id,
+      expireAt: Date.now(),
+    });
     if (!databaseToken)
       return response({
         res: res,
@@ -239,10 +223,9 @@ const removeUser = async (req, res) => {
         successBoolean: true,
         message: "Failed to logout. Please try again.",
       });
-    databaseToken.expireAt = Date.now();
-    await databaseToken.save();
-    await Promise.all(deletedProfileImages);
-    await Promise.all(deletedCoverImages);
+    // databaseToken.set({ expireAt: Date.now() });
+    // await databaseToken.save();
+    await user.save();
 
     return response({
       res: res,
@@ -275,6 +258,7 @@ const updateUser = async (req, res) => {
       email: req?.body?.email,
       name: req?.body?.name,
       password: req?.body?.password,
+      socialLinks: req.body.socialLinks,
       about: {
         bio: req?.body?.bio,
         livesIn: req?.body?.livesIn,
@@ -288,6 +272,7 @@ const updateUser = async (req, res) => {
     user.set({
       ...fieldToUpdate,
     });
+
     if (req?.body?.socialLinks) {
       const link = new linkModel({
         url: req?.body?.socialLinks,
@@ -299,7 +284,7 @@ const updateUser = async (req, res) => {
       await Promise.all(
         Object?.keys(req.files)?.map(async (key) => {
           if (req.files[key]) {
-            const newMedia = new mediaSchema({
+            const newMedia = new mediaModel({
               type: key,
               owner: user._id,
               url: await imageUploader(key, req),
