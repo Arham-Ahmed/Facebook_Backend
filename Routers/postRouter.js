@@ -23,15 +23,15 @@ const postRouter = express.Router();
 postRouter.use(isauthenticated);
 postRouter
   .get("/", getallPost)
-  .get("/user-post", getallUserPost)
+  .get("/userPost", getallUserPost)
   .post(
-    "/create-post",
+    "/createPost",
     [upload([{ name: "postImage", maxcount: 6 }]), validator(createPostSchema)],
     createPost
   )
   .post("/like/:id", Like)
   .post("/comment", CreateComment)
-  .delete("/delete-post/:id", removePost)
-  .delete("/delete-comment/:id", DeleteComment);
+  .delete("/deletePost/:id", removePost)
+  .delete("/deleteComment/:id", DeleteComment);
 
 module.exports = postRouter;

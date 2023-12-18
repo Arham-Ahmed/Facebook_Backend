@@ -3,16 +3,14 @@ const bcryptjs = require("bcryptjs");
 const tokenModel = require("../Models/token");
 const mediaSchema = require("../Models/media");
 const linkModel = require("../Models/link");
-const response = require("../Utils/response");
+const { response, aggregator } = require("../Utils/index");
 const {
   firebaseImageDelete,
   imagePathMaker,
-  validateUserPresence,
   jwtGenerator,
   imageUploader,
 } = require("../helper");
 const { isValidObjectId } = require("mongoose");
-// const { isValidObjectId, default: mongoose } = require("mongoose");
 
 ///////////////////////////////////////////// For Creating Users /////////////////////////////////////
 const createUser = async (req, res) => {
@@ -102,7 +100,6 @@ const loginUser = async (req, res) => {
         successBoolean: false,
         message: "Internal server error",
       });
-
     // tokenSave in database
     const newToken = new tokenModel({
       token: token,
@@ -111,26 +108,28 @@ const loginUser = async (req, res) => {
     });
 
     await newToken?.save();
-    const logedinUser = await userModel.aggregate([
-      { $match: { _id: user._id } },
-      {
-        $lookup: {
-          from: "media",
-          localField: "_id",
-          foreignField: "owner",
-          as: "media",
-        },
-      },
-      {
-        $project: {
-          isDeleted: 0,
-          password: 0,
-          role: 0,
-          __v: 0,
-          "media.owner": 0,
-        },
-      },
-    ]);
+    const logedinUser = await aggregator(user._id);
+
+    // await userModel.aggregate([
+    //   { $match: { _id: user._id } },
+    //   {
+    //     $lookup: {
+    //       from: "media",
+    //       localField: "_id",
+    //       foreignField: "owner",
+    //       as: "media",
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       isDeleted: 0,
+    //       password: 0,
+    //       role: 0,
+    //       __v: 0,
+    //       "media.owner": 0,
+    //     },
+    //   },
+    // ]);
     return response({
       res: res,
       statusCode: 200,
@@ -196,7 +195,6 @@ const removeUser = async (req, res) => {
     const user = await userModel
       ?.findOne({ email: email, isDeleted: null })
       ?.select("+password");
-    // validateUserPresence(user);
     if (!user) {
       return response({
         res: res,
@@ -231,7 +229,6 @@ const removeUser = async (req, res) => {
     // //     message: "User not found",
     // //   });
     // // }
-    // validateUserPresence(deleteUser);
     user.set({ isDeleted: Date.now() });
     user.profilePhotos = [];
     await user.save();
@@ -314,23 +311,25 @@ const updateUser = async (req, res) => {
       );
     }
     await user?.save();
-    const updatedUser = await userModel.aggregate([
-      { $match: { _id: user._id } },
-      {
-        $lookup: {
-          from: "links",
-          localField: "_id",
-          foreignField: "owner",
-          as: "socialLinks",
-        },
-      },
-    ]);
+    // const updatedUser = await userModel.aggregate([
+    //   { $match: { _id: user._id } },
+    //   {
+    //     $lookup: {
+    //       from: "links",
+    //       localField: "_id",
+    //       foreignField: "owner",
+    //       as: "socialLinks",
+    //     },
+    //   },
+    // ]);
+
+    const updatedUser = await aggregator(user._id);
     return response({
       res: res,
       statusCode: 200,
       successBoolean: true,
       message: "Updated sucessfully",
-      payload: updatedUser,
+      payload: { ...updatedUser }[0],
     });
   } catch (e) {
     return response({
@@ -384,102 +383,7 @@ const getallUsers = async (req, res) => {
 const userCall = async (req, res) => {
   try {
     const userId = req.user?._id;
-    const user = await userModel.aggregate([
-      { $match: { _id: userId } },
-      {
-        $lookup: {
-          from: "posts",
-          localField: "_id",
-          foreignField: "owner",
-          as: "post",
-        },
-      },
-      {
-        $lookup: {
-          from: "media",
-          localField: "_id",
-          foreignField: "owner",
-          as: "media",
-        },
-      },
-      {
-        $lookup: {
-          from: "links",
-          localField: "_id",
-          foreignField: "owner",
-          as: "socialLinks",
-        },
-      },
-      {
-        $lookup: {
-          from: "media",
-          localField: "post._id",
-          foreignField: "post",
-          as: "postMedia",
-        },
-      },
-
-      {
-        $project: {
-          _id: 1,
-          name: 1,
-          email: 1,
-          createdAt: 1,
-          updatedAt: 1,
-          about: {
-            livesIn: "$about.livesIn",
-            bio: "$about.bio",
-            socialLinks: "$socialLinks",
-          },
-          profileImages: {
-            $filter: {
-              input: "$media",
-              cond: { $eq: ["$$this.type", "profileImage"] },
-            },
-          },
-          coverImages: {
-            $filter: {
-              input: "$media",
-              cond: { $eq: ["$$this.type", "coverImage"] },
-            },
-          },
-          posts: {
-            $map: {
-              input: "$post",
-              as: "p",
-              in: {
-                post: "$$p",
-                postImages: "$postMedia",
-              },
-            },
-          },
-        },
-      },
-
-      {
-        $unset: [
-          "profileImages.owner",
-          "profileImages.type",
-          "profileImages._id",
-          "profileImages.createdAt",
-          "profileImages.updatedAt",
-          "profileImages.__v",
-          //
-          "coverImages.owner",
-          "coverImages.type",
-          "coverImages._id",
-          "coverImages.createdAt",
-          "coverImages.updatedAt",
-          "coverImages.__v",
-          //
-          "postImages.owner",
-          "postImages.type",
-          "postImages._id",
-          "postImages.updatedAt",
-          "postImages.__v",
-        ],
-      },
-    ]);
+    const user = await aggregator(userId);
     return response({
       res: res,
       statusCode: 200,
@@ -500,120 +404,6 @@ const userCall = async (req, res) => {
   }
 };
 //////////////////////////////////////////// Friend Request  ////////////////////////////////////////
-// const friendReq = async (req, res) => {
-//   try {
-//     const { id } = req.body;
-//     if (!isValidObjectId(id)) {
-//       return response({
-//         res: res,
-//         statusCode: 400,
-//         message: "No user found",
-//       });
-//     }
-//     const requester = req.user.id;
-//     const receiver = await userModel.aggregate([
-//       { $match: { _id: mongoose.Schema.Types.ObjectId(id) } },
-//       {
-//         $lookup: {
-//           from: "FriendRequest",
-//           localfeild: "requesterId",
-//           foreignField: "_id",
-//           // as: "requester",
-//         },
-//       },
-//     ]);
-//     console.log(
-//       "🚀 ~ file: userController.js:365 ~ friendReq ~ receiver:",
-//       receiver
-//     );
-//     validateUserPresence(receiver);
-//     if (receiver) {
-//     }
-//     const FriendRequest = new friendRequestModel({
-//       requesterId: requester,
-//       recipientId: receiver._id,
-//     });
-//     if (!FriendRequest) {
-//       return response({
-//         res: res,
-//         statusCode: 500,
-//         message: "Internal server error",
-//       });
-//     }
-//     await FriendRequest.save();
-//     receiver?.friendRequests?.push(FriendRequest);
-//     await receiver.save();
-//     return response({
-//       res: res,
-//       statusCode: 200,
-//       successBoolean: true,
-//       message: "Request Submit Sucessfully",
-//       payload: FriendRequest,
-//     });
-//   } catch (e) {
-//     return response({
-//       res: res,
-//       statusCode: 500,
-//       successBoolean: false,
-//       message: "Error",
-//       payload: e.message,
-//     });
-//   }
-// };
-
-// const friendAdd = async (req, res) => {
-//   try {
-//     const { id } = req.body;
-//     if (!isValidObjectId(id)) {
-//       return response({
-//         res: res,
-//         statusCode: 400,
-//         message: "No user found",
-//       });
-//     }
-//     // current User is accepter  //
-//     // and friend Who where add in friends array   //
-//     const accepter = await userModel.findById(req.user._id);
-//     const friendReqUpadate = await friendRequestModel.findById(id);
-//     if (!friendReqUpadate) {
-//       return response({
-//         res: res,
-//         statusCode: 400,
-//         message: "Id required",
-//       });
-//     }
-//     const friend = await userModel.findById(
-//       friendReqUpadate?.recipientId.toString()
-//     );
-//     validateUserPresence(friend);
-//     friend.friends.push(accepter._id);
-//     friendReqUpadate.set({ status: "Accepted" });
-//     accepter.friendRequests.filter(
-//       (request) => request._id.toString() != friend._id.toString()
-//     );
-//     friend.friendRequests.filter(
-//       (request) => request._id.toString() != friend._id.toString()
-//     );
-//     await friendReqUpadate.save();
-//     await friend.save();
-//     await accepter.save();
-//     return response({
-//       res: res,
-//       statusCode: 200,
-//       message: `${friend.name} as a friend add sucessfully`,
-//       payload: accepter,
-//     });
-//   } catch (e) {
-//     return response({
-//       res: res,
-//       statusCode: 500,
-//       successBoolean: false,
-//       message: "Error",
-//       payload: e.message,
-//     });
-//   }
-// };
-
 module.exports = {
   createUser,
   getallUsers,

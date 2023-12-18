@@ -29,8 +29,7 @@ const isauthenticated = async (req, res, next) => {
       });
 
     const decode = jwtVerifier(databaseToken, res);
-    const user = await userModel.findById(decode?._id);
-    validateUserPresence(user, res);
+    const user = await userModel.findOne({ _id: decode?._id, isDeleted: null });
     req.user = user;
     req.token = token;
     next();

@@ -7,7 +7,6 @@ const {
   firebaseImageDelete,
   imagePathMaker,
   imageMimetype,
-  validateUserPresence,
   imageUploader,
 } = require("../helper/index");
 
@@ -56,7 +55,6 @@ const createPost = async (req, res) => {
           as: "postImage",
         },
       },
-      // { $project: { owner: 0 } },
     ]);
     return response({
       res: res,
@@ -212,17 +210,19 @@ const removePost = async (req, res) => {
         successBoolean: true,
         message: "No post found",
       });
-    const deletedImages = post?.imageUrl?.map((image) => {
-      const deleteImagPath = imagePathMaker(image);
-      return firebaseImageDelete(deleteImagPath);
+    // const deletedImages = post?.imageUrl?.map((image) => {
+    //   const deleteImagPath = imagePathMaker(image);
+    //   return firebaseImageDelete(deleteImagPath);
+    // });
+    const user = await userModel.findOne({
+      _id: req.user?._id,
+      isDeleted: null,
     });
-    const user = await userModel.findById(req.user?.id);
-    validateUserPresence(user, res);
     post.set({ isDeleted: Date.now() });
     // await postModel.findByIdAndDelete(id);
     // user?.posts?.filter((post) => post.toString() != post._id.toString());
     // user?.post?.pull(post?._id);
-    await Promise.all(deletedImages);
+    // await Promise.all(deletedImages);
     await post?.save();
     await user?.save();
 

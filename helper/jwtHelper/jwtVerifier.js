@@ -4,7 +4,7 @@ const jwtVerifier = (databaseToken) => {
   try {
     return jwt?.verify(databaseToken?.token, process.env.JWTSCERET);
   } catch (e) {
-    let err = new Error(`Un authorized ! ${e.message}`);
+    let err = new Error(`Unauthorized ! ${e.message}`);
     err.statusCode = 401;
     throw err;
   }
